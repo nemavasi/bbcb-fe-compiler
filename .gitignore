@@ -4,3 +4,9 @@
 /.idea/misc.xml
 /.idea/modules.xml
 /.idea/vcs.xml
+
+# Generated runtime support (sources/libs/java/*.java)
+/sources/libs/java/cprts.jar
+/sources/libs/java/dest/
+/libs/CP/CPJrts/ProcKey.class
+/libs/CP/CPJrts/TrapError.class

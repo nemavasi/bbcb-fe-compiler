@@ -624,9 +624,15 @@ distinguish from an ordinary command error.
   behaviour;
 - division/modulo (`DIV`, `MOD`) trap `139` for a zero divisor and for
   `MIN / -1` (the JVM itself returns `MIN` for the latter);
-- `jars/cprts.jar`, `sources/libs/java/cprts.jar` and
-  `libs/CP/CPJrts/` now contain `TrapError.class` and the updated
-  `CPJrts.class`.
+- runtime classes are **built from** `sources/libs/java/*.java`
+  (`MakeRtsJar`, or the test runner); generated `cprts.jar`/`.class` files are
+  not committed.  `jars/cprts.jar` remains the unchanged bootstrap jar; the
+  test runner builds `TrapError`/`CPJrts` into its temporary tree and puts that
+  first on the compile and run classpaths.  For an external `JROOT`, run
+  `sources/libs/java/MakeRtsJar`, then
+  `cp sources/libs/java/cprts.jar jars/cprts.jar` and
+  `cp sources/libs/java/dest/CP/CPJrts/*.class libs/CP/CPJrts/` before using
+  the new runtime.
 
 **Tests.** New `trap_*` cases cover `HALT(7)`, `HALT(128)`, `HALT` in
 `<clinit>`, `HALT` in a function and in a void procedure, `ASSERT` with and
