@@ -10,3 +10,6 @@
 /sources/libs/java/dest/
 /libs/CP/CPJrts/ProcKey.class
 /libs/CP/CPJrts/TrapError.class
+
+# Compiler-generated symbol files (cpmake / gpcp)
+/sources/gpcp/*.cps
