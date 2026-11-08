@@ -1,0 +1,11 @@
+MODULE TProc;
+  IMPORT CPmain;
+
+  PROCEDURE P;
+  BEGIN
+    HALT(4)
+  END P;
+
+BEGIN
+  P
+END TProc.

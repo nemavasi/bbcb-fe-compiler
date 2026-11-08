@@ -1,0 +1,2 @@
+TrapError: TRAP 130
+at CP.TCase.TCase.main

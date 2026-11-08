@@ -381,6 +381,7 @@ MODULE JavaMaker;
 (* ============================================================ *)
 
   PROCEDURE (t : JavaEmitter)EmitBody(f : Ju.JavaFile),NEW,ABSTRACT;
+  PROCEDURE^ ovfChecked(out : Ju.JavaFile) : BOOLEAN;
   PROCEDURE^ (e : JavaEmitter)EmitProc(proc : Id.Procs),NEW;
   PROCEDURE^ (e : JavaEmitter)EmitStat(
              stat : Sy.Stmt; OUT ok : BOOLEAN),NEW;
@@ -651,7 +652,7 @@ MODULE JavaMaker;
       *   module body is emitted as <clinit>
       *)
       this.EmitStat(this.mod.modBody, returned);
-      out.VoidTail();
+      IF returned THEN out.VoidTail() ELSE out.EndProc() END;
     END;
    (* 
     *  Emit all of the static procedures
@@ -1228,7 +1229,13 @@ MODULE JavaMaker;
         ELSE 				(* all INTEGER cases *)
           code := Jvm.opc_ineg;
         END;
-        out.Code(code);
+        IF ovfChecked(out) & (dNum = Ty.intN) THEN
+          out.CallRTS(Ju.NegI,1,1)
+        ELSIF ovfChecked(out) & (dNum = Ty.lIntN) THEN
+          out.CallRTS(Ju.NegL,2,2)
+        ELSE
+          out.Code(code)
+        END;
     | Xp.absVl :
         dNum := dst(Ty.Base).tpOrd;
         IF    dNum = Ty.realN THEN
@@ -1252,7 +1259,13 @@ MODULE JavaMaker;
         END;
         labl := out.newLabel();
         out.CodeLb(Jvm.opc_ifge, labl);	(* NOT ifle, Aug2001 *)
-        out.Code(code);
+        IF ovfChecked(out) & (dNum = Ty.intN) THEN
+          out.CallRTS(Ju.NegI,1,1)
+        ELSIF ovfChecked(out) & (dNum = Ty.lIntN) THEN
+          out.CallRTS(Ju.NegL,2,2)
+        ELSE
+          out.Code(code)
+        END;
         out.DefLab(labl);
     | Xp.entVl :
         dNum := dst(Ty.Base).tpOrd;
@@ -1609,6 +1622,12 @@ MODULE JavaMaker;
 
 (* ============================================================ *)
 
+  PROCEDURE ovfChecked(out : Ju.JavaFile) : BOOLEAN;
+  BEGIN
+    IF out.theP = NIL THEN RETURN CSt.thisMod.ovfChk END;
+    RETURN out.theP.ovfChk
+  END ovfChecked;
+
   PROCEDURE (e : JavaEmitter)PushBinary(exp : Xp.BinaryX; dst : Sy.Type),NEW;
     VAR out  : Ju.JavaFile;
         lOp  : Sy.Expr;
@@ -1834,19 +1853,34 @@ MODULE JavaMaker;
         dNum := dst(Ty.Base).tpOrd;
         e.PushValue(lOp, dst);
         e.PushValue(rOp, dst);
-        out.Code(plusCode(dNum));
+        IF ovfChecked(out) & ((dNum = Ty.intN) OR (dNum = Ty.lIntN)) THEN
+          IF dNum = Ty.lIntN THEN out.CallRTS(Ju.AddL,4,2)
+          ELSE out.CallRTS(Ju.AddI,2,1) END
+        ELSE
+          out.Code(plusCode(dNum))
+        END;
     (* -------------------------------- *)
     | Xp.minus :
         dNum := dst(Ty.Base).tpOrd;
         e.PushValue(lOp, dst);
         e.PushValue(rOp, dst);
-        out.Code(minusCode(dNum));
+        IF ovfChecked(out) & ((dNum = Ty.intN) OR (dNum = Ty.lIntN)) THEN
+          IF dNum = Ty.lIntN THEN out.CallRTS(Ju.SubL,4,2)
+          ELSE out.CallRTS(Ju.SubI,2,1) END
+        ELSE
+          out.Code(minusCode(dNum))
+        END;
     (* -------------------------------- *)
     | Xp.mult :
         dNum := dst(Ty.Base).tpOrd;
         e.PushValue(lOp, dst);
         e.PushValue(rOp, dst);
-        out.Code(multCode(dNum));
+        IF ovfChecked(out) & ((dNum = Ty.intN) OR (dNum = Ty.lIntN)) THEN
+          IF dNum = Ty.lIntN THEN out.CallRTS(Ju.MulL,4,2)
+          ELSE out.CallRTS(Ju.MulI,2,1) END
+        ELSE
+          out.Code(multCode(dNum))
+        END;
     (* -------------------------------- *)
     | Xp.slash :
         e.PushValue(lOp, dst);
@@ -2635,7 +2669,12 @@ MODULE JavaMaker;
 
   PROCEDURE IncByLit(out : Ju.JavaFile; ord : INTEGER; inc : INTEGER);
   BEGIN
-    IF (ord < 256) & (inc >= -128) & (inc <= 127) THEN
+    IF ovfChecked(out) THEN
+      out.LoadLocal(ord, Bi.intTp);
+      out.PushInt(inc);
+      out.CallRTS(Ju.AddI,2,1);
+      out.StoreLocal(ord, Bi.intTp)
+    ELSIF (ord < 256) & (inc >= -128) & (inc <= 127) THEN
       out.CodeInc(ord, inc);
     ELSE
       out.LoadLocal(ord, Bi.intTp);
@@ -2715,10 +2754,10 @@ MODULE JavaMaker;
         *)
         IF argN > 1 THEN
           numL := intValue(callX.actuals.a[1]);
-          out.Trap(fMsg + L.intToCharOpen(numL)^);
+          out.TrapWithLocals(fMsg + L.intToCharOpen(numL)^);
         ELSE
           numL := callX.token.lin;
-          out.Trap(fMsg + CSt.srcNam +":"+ L.intToCharOpen(numL)^);
+          out.TrapWithLocals(fMsg + CSt.srcNam +":"+ L.intToCharOpen(numL)^);
         END;
         out.DefLab(okLb);
    (* --------------------------- *)
@@ -2770,7 +2809,17 @@ MODULE JavaMaker;
         ELSE
           IF pOrd = Bi.incP THEN c := Jvm.opc_iadd ELSE c := Jvm.opc_isub END;
         END;
-        out.Code(c);
+        IF ovfChecked(out) THEN
+          IF long THEN
+            IF pOrd = Bi.incP THEN out.CallRTS(Ju.AddL,4,2)
+            ELSE out.CallRTS(Ju.SubL,4,2) END
+          ELSE
+            IF pOrd = Bi.incP THEN out.CallRTS(Ju.AddI,2,1)
+            ELSE out.CallRTS(Ju.SubI,2,1) END
+          END
+        ELSE
+          out.Code(c)
+        END;
         e.ScalarAssign(arg0);
    (* --------------------------- *)
     | Bi.cutP :
@@ -2907,8 +2956,10 @@ MODULE JavaMaker;
    (* --------------------------- *)
     | Bi.haltP :
         out.PushInt(intValue(arg0));
-        out.CallRTS(Ju.SysExit,1,0);
+        out.PushTrapFrame();
+        out.CallRTS(Ju.HaltTrap,3,0);
         out.PushJunkAndReturn();
+        ok := FALSE;   (* HALT does not fall through *)
    (* --------------------------- *)
     | Bi.throwP :
         IF CSt.ntvExc.assignCompat(arg0) THEN

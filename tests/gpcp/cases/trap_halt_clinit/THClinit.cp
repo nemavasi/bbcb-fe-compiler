@@ -1,0 +1,5 @@
+MODULE THClinit;
+  VAR zero*: INTEGER;
+BEGIN
+  HALT(9)
+END THClinit.

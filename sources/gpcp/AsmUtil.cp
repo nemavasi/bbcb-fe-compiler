@@ -150,10 +150,10 @@ MODULE AsmUtil;
       clinitStr,  (* "<clinit>"            *)
       copyStr,    (* "__copy__"            *)
       jleStr,     (* "java/lang/Exception" *)
+      jTrapStr,   (* "CP/CPJrts/TrapError" *)
       jlmStr,     (* "java/lang/Math"      *)
       jlcStr,     (* "java/lang/Class"     *)
       jlchStr,    (* "java/lang/Character" *)
-      jlsyStr,    (* "java/lang/System"    *)
       rtsStr,     (* "CP/CPJrts/CPJrts"    *)
       cpMain,     (* "CP/CPmain/CPmain"    *)
      (* ------------------------------------ *)
@@ -182,9 +182,9 @@ MODULE AsmUtil;
       (* Kludge to make NIL typecheck with array formal *)
       jlsEmptyArr : Def.JlsArr;
 
-  VAR procNames  : ARRAY 24 OF Lv.CharOpen;
-      procSigs   : ARRAY 24 OF Lv.CharOpen;
-      procRetS   : ARRAY 24 OF Lv.CharOpen;
+  VAR procNames  : ARRAY 40 OF Lv.CharOpen;
+      procSigs   : ARRAY 40 OF Lv.CharOpen;
+      procRetS   : ARRAY 40 OF Lv.CharOpen;
       getClass   : Lv.CharOpen;
       IIretI     : Lv.CharOpen;
       JJretJ     : Lv.CharOpen;
@@ -898,6 +898,130 @@ MODULE AsmUtil;
  (* --------------------------------------------------------- *)
  (*   newLongLocal allocates a 2-slot temp, bumps LocalNum    *)
  (* --------------------------------------------------------- *)
+ (* --------------------------------------------------------- *)
+ (*   Box a scalar value already on the operand stack.         *)
+ (* --------------------------------------------------------- *)
+  PROCEDURE (emtr : AsmEmitter)PushBox(typ : Sym.Type),NEW;
+    VAR desc : Lv.CharOpen;
+        cls, nam, sig : RTS.NativeString;
+        delta : INTEGER;
+  BEGIN
+    desc := Hlp.GetBinaryTypeName( typ );
+    cls := NIL; nam := NIL; sig := NIL; delta := 0;
+    IF desc # NIL THEN
+      CASE desc[0] OF
+      | "Z" : cls := MKSTR("java/lang/Boolean");  nam := MKSTR("valueOf");
+              sig := MKSTR("(Z)Ljava/lang/Boolean;")
+      | "B" : cls := MKSTR("java/lang/Byte");     nam := MKSTR("valueOf");
+              sig := MKSTR("(B)Ljava/lang/Byte;")
+      | "S" : cls := MKSTR("java/lang/Short");    nam := MKSTR("valueOf");
+              sig := MKSTR("(S)Ljava/lang/Short;")
+      | "C" : cls := MKSTR("java/lang/Character");nam := MKSTR("valueOf");
+              sig := MKSTR("(C)Ljava/lang/Character;")
+      | "I" : cls := MKSTR("java/lang/Integer");  nam := MKSTR("valueOf");
+              sig := MKSTR("(I)Ljava/lang/Integer;")
+      | "J" : cls := MKSTR("java/lang/Long");     nam := MKSTR("valueOf");
+              sig := MKSTR("(J)Ljava/lang/Long;");  delta := -1
+      | "F" : cls := MKSTR("java/lang/Float");    nam := MKSTR("valueOf");
+              sig := MKSTR("(F)Ljava/lang/Float;")
+      | "D" : cls := MKSTR("java/lang/Double");   nam := MKSTR("valueOf");
+              sig := MKSTR("(D)Ljava/lang/Double;"); delta := -1
+      ELSE (* reference: no boxing *)
+      END
+    END;
+    IF cls # NIL THEN
+      emtr.CheckFrame();
+      emtr.thisMv.visitMethodInsn(
+          ASM.Opcodes.INVOKESTATIC, cls, nam, sig, FALSE );
+      emtr.mthFrame.DeltaEvalDepth( delta );
+      emtr.mthFrame.SetTosType( CSt.ntvObj )
+    END
+  END PushBox;
+
+ (* --------------------------------------------------------- *)
+ (*   Build the HaltTrap local snapshot: String[] names,       *)
+ (*   Object[] values.  Leaves both arrays on the stack.       *)
+ (* --------------------------------------------------------- *)
+  PROCEDURE (emtr : AsmEmitter)PushTrapFrame*();
+    VAR proc : Id.Procs;
+        namesOrd, valuesOrd, idx, parIx, count : INTEGER;
+        namesTp, valuesTp : Sym.Type;
+        local : Id.LocId;
+        vName : RTS.NativeString;
+   (* -------------------------------------------- *)
+    PROCEDURE usable(l : Id.LocId) : BOOLEAN;
+    BEGIN
+      IF (l = NIL) OR (l.type = NIL) OR (l = proc.except) THEN RETURN FALSE END;
+      IF Id.uplevA IN l.locAtt THEN RETURN FALSE END;
+     (* A scalar OUT parameter lives in the return slot/box, not varOrd. *)
+      IF l IS Id.ParId THEN
+        IF (l(Id.ParId).parMod = Sym.out) & l.type.isScalarType() THEN
+          RETURN FALSE
+        END
+      END;
+      IF l.namStr # NIL THEN RETURN TRUE END;
+      IF l IS Id.ParId THEN RETURN l(Id.ParId).isRcv END;
+      RETURN FALSE
+    END usable;
+   (* -------------------------------------------- *)
+    PROCEDURE localName(l : Id.LocId) : RTS.NativeString;
+    BEGIN
+      IF l.namStr # NIL THEN RETURN l.namStr END;
+      RETURN MKSTR("this")
+    END localName;
+   (* -------------------------------------------- *)
+  BEGIN
+    proc := emtr.theP;
+    IF proc = NIL THEN
+     (* module body: no snapshot *)
+      emtr.Code(Jvm.opc_aconst_null);
+      emtr.Code(Jvm.opc_aconst_null);
+      RETURN
+    END;
+    count := 0;
+    FOR idx := 0 TO proc.locals.tide - 1 DO
+      IF usable(proc.locals.a[idx](Id.LocId)) THEN INC(count) END
+    END;
+
+    namesTp := CSt.ntvStrArr;
+    valuesTp := Ty.mkArrayOf(CSt.ntvObj);
+    namesOrd := emtr.newLocal(namesTp);
+    valuesOrd := emtr.newLocal(valuesTp);
+
+    emtr.MkNewFixedArray(CSt.ntvStr, count);
+    emtr.mthFrame.SetTosType(namesTp);
+    emtr.StoreLocal(namesOrd, namesTp);
+
+    emtr.MkNewFixedArray(CSt.ntvObj, count);
+    emtr.mthFrame.SetTosType(valuesTp);
+    emtr.StoreLocal(valuesOrd, valuesTp);
+
+    parIx := 0;
+    FOR idx := 0 TO proc.locals.tide - 1 DO
+      local := proc.locals.a[idx](Id.LocId);
+      IF usable(local) THEN
+       (* names[parIx] := name *)
+        emtr.AloadLocal(namesOrd, namesTp);
+        emtr.PushInt(parIx);
+        vName := localName(local);
+        emtr.CheckFrame();
+        emtr.thisMv.visitLdcInsn(vName);
+        emtr.mthFrame.FixEvalStack(Jvm.opc_ldc, CSt.ntvStr);
+        emtr.Code(Jvm.opc_aastore);
+       (* values[parIx] := box(value) *)
+        emtr.AloadLocal(valuesOrd, valuesTp);
+        emtr.PushInt(parIx);
+        emtr.LoadLocal(local.varOrd, local.type);
+        emtr.PushBox(local.type);
+        emtr.Code(Jvm.opc_aastore);
+        INC(parIx)
+      END
+    END;
+
+    emtr.AloadLocal(namesOrd, namesTp);
+    emtr.AloadLocal(valuesOrd, valuesTp)
+  END PushTrapFrame;
+
   PROCEDURE (emtr : AsmEmitter)newLongLocal*( t : Sym.Type ) : INTEGER;
     VAR ord,new : INTEGER;
   BEGIN
@@ -1339,8 +1463,6 @@ MODULE AsmUtil;
        classStr := jlchStr        (* java/lang/Character *)
     ELSIF ix = Ju.DFloor THEN
        classStr := jlmStr         (* java/lang/Math      *)
-    ELSIF ix = Ju.SysExit THEN
-       classStr := jlsyStr        (* java/lang/System    *)
     ELSE
        classStr := rtsStr         (* CP/CPJrts/CPJrts    *);
     END;
@@ -1810,17 +1932,30 @@ MODULE AsmUtil;
   BEGIN
     emtr.CheckFrame();
     mv := emtr.thisMv;
-    mv.visitTypeInsn( ASM.Opcodes.`NEW, jleStr );
+    mv.visitTypeInsn( ASM.Opcodes.`NEW, jTrapStr );
     mv.visitInsn( ASM.Opcodes.DUP );
     mv.visitLdcInsn( MKSTR(str) );
     emtr.mthFrame.DeltaEvalDepth( 3 );
     mv.visitMethodInsn(
-        ASM.Opcodes.INVOKESPECIAL, jleStr, initStr, strToVoid, FALSE );
+        ASM.Opcodes.INVOKESPECIAL, jTrapStr, initStr, strToVoid, FALSE );
     emtr.mthFrame.DeltaEvalDepth( -2 );
     mv.visitInsn( ASM.Opcodes.ATHROW );
     emtr.mthFrame.InvalidateEvalStack();
    (* no net stack change *)
   END Trap;
+
+ (* --------------------------------------------------------- *)
+ (*  ASSERT-style trap with a snapshot of the current locals.  *)
+ (*  TrapMsg returns TrapError; athrow consumes it.             *)
+ (* --------------------------------------------------------- *)
+  PROCEDURE (emtr : AsmEmitter)TrapWithLocals*(IN str : ARRAY OF CHAR);
+  BEGIN
+    emtr.PushStr(Lv.strToCharOpen(str));
+    emtr.PushTrapFrame();
+    emtr.CallRTS(Ju.TrapMsg,3,1);
+    emtr.Code(Jvm.opc_athrow);
+    emtr.mthFrame.InvalidateEvalStack()
+  END TrapWithLocals;
 
  (* --------------------------------------------------------- *)
 
@@ -1829,14 +1964,14 @@ MODULE AsmUtil;
   BEGIN
     emtr.CheckFrame();
     mv := emtr.thisMv;
-    mv.visitTypeInsn( ASM.Opcodes.`NEW, jleStr );
+    mv.visitTypeInsn( ASM.Opcodes.`NEW, jTrapStr );
     mv.visitInsn( ASM.Opcodes.DUP );
     emtr.LoadLocal( i, Blt.intTp );
     emtr.mthFrame.DeltaEvalDepth( 3 );
     mv.visitMethodInsn(
         ASM.Opcodes.INVOKESTATIC, rtsStr, caseTrap, caseTrapSig, FALSE );
     mv.visitMethodInsn(
-        ASM.Opcodes.INVOKESPECIAL, jleStr, initStr, strToVoid, FALSE );
+        ASM.Opcodes.INVOKESPECIAL, jTrapStr, initStr, strToVoid, FALSE );
     emtr.mthFrame.DeltaEvalDepth( -2 );
     mv.visitInsn( ASM.Opcodes.ATHROW );
     emtr.mthFrame.InvalidateEvalStack();
@@ -1850,14 +1985,14 @@ MODULE AsmUtil;
   BEGIN
     emtr.CheckFrame();
     mv := emtr.thisMv;
-    mv.visitTypeInsn( ASM.Opcodes.`NEW, jleStr ); (* +1 *)
-    mv.visitInsn( ASM.Opcodes.DUP );              (* +2 *)
-    emtr.GetVar( id );                            (* +3 *)
+    mv.visitTypeInsn( ASM.Opcodes.`NEW, jTrapStr ); (* +1 *)
+    mv.visitInsn( ASM.Opcodes.DUP );                (* +2 *)
+    emtr.GetVar( id );                              (* +3 *)
     emtr.mthFrame.DeltaEvalDepth( 3 );
     mv.visitMethodInsn(
         ASM.Opcodes.INVOKESTATIC, rtsStr, withTrap, withTrapSig, FALSE );
     mv.visitMethodInsn(
-        ASM.Opcodes.INVOKESPECIAL, jleStr, initStr, strToVoid, FALSE );
+        ASM.Opcodes.INVOKESPECIAL, jTrapStr, initStr, strToVoid, FALSE );
     emtr.mthFrame.DeltaEvalDepth( -2 );
     mv.visitInsn( ASM.Opcodes.ATHROW );
     emtr.mthFrame.InvalidateEvalStack();
@@ -1936,10 +2071,10 @@ BEGIN  (* Module Body *)
   clinitStr     := MKSTR( "<clinit>"            );
   copyStr       := MKSTR( "__copy__"            );
   jleStr        := MKSTR( "java/lang/Exception" );
+  jTrapStr      := MKSTR( "CP/CPJrts/TrapError" );
   jlmStr        := MKSTR( "java/lang/Math"      );
   jlcStr        := MKSTR( "java/lang/Class"     );
   jlchStr       := MKSTR( "java/lang/Character" );
-  jlsyStr       := MKSTR( "java/lang/System"    );
 
   cpMain        := MKSTR( "CP/CPmain/CPmain"    );
   rtsStr        := MKSTR( "CP/CPJrts/CPJrts"    );
@@ -1989,7 +2124,17 @@ BEGIN  (* Module Body *)
   procNames[Ju.StrCatSS] := Lv.strToCharOpen("StrStrToString");
   procNames[Ju.StrLP1] := Lv.strToCharOpen("ChrArrLplus1");
   procNames[Ju.StrVal] := Lv.strToCharOpen("ChrArrStrCopy");
-  procNames[Ju.SysExit] := Lv.strToCharOpen("exit");
+  procNames[Ju.Halt] := Lv.strToCharOpen("Halt");
+  procNames[Ju.HaltTrap] := Lv.strToCharOpen("HaltTrap");
+  procNames[Ju.TrapMsg] := Lv.strToCharOpen("TrapMsg");
+  procNames[Ju.AddI] := Lv.strToCharOpen("AddI");
+  procNames[Ju.SubI] := Lv.strToCharOpen("SubI");
+  procNames[Ju.MulI] := Lv.strToCharOpen("MulI");
+  procNames[Ju.NegI] := Lv.strToCharOpen("NegI");
+  procNames[Ju.AddL] := Lv.strToCharOpen("AddL");
+  procNames[Ju.SubL] := Lv.strToCharOpen("SubL");
+  procNames[Ju.MulL] := Lv.strToCharOpen("MulL");
+  procNames[Ju.NegL] := Lv.strToCharOpen("NegL");
   procNames[Ju.LoadTp1] := Lv.strToCharOpen("getClassByOrd");
   procNames[Ju.LoadTp2] := Lv.strToCharOpen("getClassByName");
 
@@ -2018,13 +2163,33 @@ BEGIN  (* Module Body *)
                    "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
   procSigs[Ju.StrLP1] := procSigs[Ju.StrLen];
   procSigs[Ju.StrVal] := Lv.strToCharOpen("([C[C)V");
-  procSigs[Ju.SysExit] := Lv.strToCharOpen("(I)V");
+  procSigs[Ju.Halt] := Lv.strToCharOpen("(I)V");
+  procSigs[Ju.HaltTrap] := Lv.strToCharOpen("(I[Ljava/lang/String;[Ljava/lang/Object;)V");
+  procSigs[Ju.TrapMsg] := Lv.strToCharOpen("(Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/Object;)LCP/CPJrts/TrapError;");
+  procSigs[Ju.AddI] := IIretI;
+  procSigs[Ju.SubI] := IIretI;
+  procSigs[Ju.MulI] := IIretI;
+  procSigs[Ju.NegI] := Lv.strToCharOpen("(I)I");
+  procSigs[Ju.AddL] := JJretJ;
+  procSigs[Ju.SubL] := JJretJ;
+  procSigs[Ju.MulL] := JJretJ;
+  procSigs[Ju.NegL] := Lv.strToCharOpen("(J)J");
   procSigs[Ju.LoadTp1] := Lv.strToCharOpen("(I)Ljava/lang/Class;");
   procSigs[Ju.LoadTp2] := Lv.strToCharOpen(
                                "(Ljava/lang/String;)Ljava/lang/Class;");
 
   procRetS[Ju.StrVal] := NIL;
-  procRetS[Ju.SysExit] := NIL;
+  procRetS[Ju.Halt] := NIL;
+  procRetS[Ju.HaltTrap] := NIL;
+  procRetS[Ju.TrapMsg] := Lv.strToCharOpen("LCP/CPJrts/TrapError;");
+  procRetS[Ju.AddI] := Lv.strToCharOpen("I");
+  procRetS[Ju.SubI] := procRetS[Ju.AddI];
+  procRetS[Ju.MulI] := procRetS[Ju.AddI];
+  procRetS[Ju.NegI] := procRetS[Ju.AddI];
+  procRetS[Ju.AddL] := Lv.strToCharOpen("J");
+  procRetS[Ju.SubL] := procRetS[Ju.AddL];
+  procRetS[Ju.MulL] := procRetS[Ju.AddL];
+  procRetS[Ju.NegL] := procRetS[Ju.AddL];
   procRetS[Ju.StrToChrs] := NIL;
   procRetS[Ju.StrCheck] := NIL;
 

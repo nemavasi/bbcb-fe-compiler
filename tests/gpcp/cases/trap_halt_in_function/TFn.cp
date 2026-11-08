@@ -1,0 +1,13 @@
+MODULE TFn;
+  IMPORT CPmain;
+  VAR n: INTEGER;
+
+  PROCEDURE F(): INTEGER;
+  BEGIN
+    HALT(3);
+    RETURN 1
+  END F;
+
+BEGIN
+  n := F()
+END TFn.

@@ -1,0 +1,2 @@
+TrapError: TRAP 7
+at CP.THalt.THalt.main

@@ -1,0 +1,5 @@
+MODULE THaltL;
+  IMPORT CPmain;
+BEGIN
+  HALT(7)
+END THaltL.

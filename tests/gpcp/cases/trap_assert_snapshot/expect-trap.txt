@@ -1,0 +1,3 @@
+TrapError: TRAP 20
+locals=a1,a2
+at CP.TAssertSnap.TAssertSnap.P

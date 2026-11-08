@@ -1,0 +1,7 @@
+MODULE TOvfI;
+  IMPORT CPmain;
+  VAR a: INTEGER;
+BEGIN
+  a := MAX(INTEGER);
+  INC(a)
+END TOvfI.
