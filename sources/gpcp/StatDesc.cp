@@ -531,6 +531,8 @@ MODULE StatDesc;
     IF (s.rhsX # NIL) & (s.rhsX.type # NIL) THEN
       lTp := s.lhsX.type;
       rTp := s.rhsX.type;
+     (* strict CP: methods and local procedures are not values *)
+      IF rTp.isProcType() THEN E.CheckProcValue(s.rhsX) END;
      (*
       * Second check: does the expression need dereferencing.
       *)
@@ -597,6 +599,10 @@ MODULE StatDesc;
           s.retX := rExp;
           IF rExp # NIL THEN (* fixed 28 July 2001 *)
             xTyp := rExp.type;
+           (* strict CP: methods and local procedures are not values *)
+            IF (xTyp # NIL) & xTyp.isProcType() THEN
+              E.CheckProcValue(rExp)
+            END;
             IF ~rTyp.assignCompat(rExp) THEN
               D.RepTypesErrTok(76, rTyp, xTyp, s.token);
             ELSIF rTyp # xTyp THEN

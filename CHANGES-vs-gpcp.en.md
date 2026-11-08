@@ -503,3 +503,70 @@ patch came from (`../IdeaProjects/bbcb-fe/tools/gpcp/patch_toolchain.py`), and a
   gpcp-JVM now behaves like the BlackBox-compatible compiler rather than like a
   stock 1.4.07 build, so error-severity and symbol-file expectations differ from
   upstream.
+
+---
+
+## 11. `sources/gpcp/JavaUtil.cp`, `JavaMaker.cp`, `ExprDesc.cp`, `StatDesc.cp` — procedure values (fixProcEqual)
+
+**Before.** On the JVM a procedure value is a wrapper object (`Proc$Lit$N`), and a
+fresh object was allocated for every evaluation of a literal. `=`/`#` compiled to
+`if_acmpeq`/`if_acmpne`, i.e. wrapper references were compared. Consequently
+`P = P` was `FALSE`, while `f = g` was `TRUE` only because both variables held the
+same object. In addition, every named procedure type got its own host class, so
+`H1 = H2` with matching signatures was `FALSE`, although the Component Pascal
+report (Appendix A) makes such types **equal**.
+
+**What changed.** Implemented the Kotlin **callable-reference** (`::f`,
+`obj::m`) / .NET delegate model.  This is deliberately not the Kotlin
+*lambda* model: `kotlin.jvm.internal.Lambda` does not override `equals`, so
+plain lambdas compare by reference.  `FunctionReference.equals`, on the other
+hand, compares owner, name, JVM signature, arity/flags and the **bound
+receiver**.  A Component Pascal procedure value is always a reference to a
+named procedure, so the `FunctionReference` analogue is the correct one.
+
+- the compiler-generated `Proc$Lit$` wrapper implements
+  `CP.CPJrts.ProcKey` and provides `procKey()` (`owner + "." + name +
+  descriptor`), `procEnv()` (`NIL` on the strict branch), `equals(Object)` and
+  `hashCode()`; equality is therefore shared by wrappers with different host
+  classes;
+- the host class of a procedure type keeps its original Java ABI.  In
+  particular, named types declared in a `-special` interface keep
+  `CP/<Mod>/<Mod>_<Type>` (`Kernel.Handler`, `Meta.CallWithProc`, …), and two
+  such types with identical signatures stay distinct (`Kernel.Handler` vs
+  `Kernel.Command`).  This is what hand-written platform bodies and their
+  method descriptors expect;
+- `DoCmp` emits `java/util/Objects.equals` for `Ty.Procedure` instead of
+  `if_acmp*`; `NIL` is handled automatically;
+- two procedure literals are folded during code generation
+  (`ProcLitKey`/`sameKey`), so `P = P` creates no wrappers at all;
+- a literal in a comparison is wrapped in the host class of the statically named
+  operand (`BinCmp`), so both sides share a base class;
+- ordinary (non-`-special`) modules give every equal signature one structural
+  host class (`CP/$T/P...`), extending ADR-067 from anonymous to named types.
+  A named type and an anonymous type with the same formal list are therefore
+  the same JVM class, and values flow between them without casts.  Modules must
+  be recompiled together (already the GPCP model);
+- direct calls through an array element of procedure type (`a[i](x)`) are
+  supported: `ExprDesc.liveActuals` and `JavaMaker.CheckCall` handle an
+  indirect callee, and `getProcVarInvoke` creates the host class whenever it
+  is missing (not only when `xName` is also NIL);
+- `TypeOfBox` supports procedure types (a one-element array box), so functions
+  with `VAR`/`OUT` procedure parameters work even when an explicit function
+  result already occupies the JVM return slot.
+
+**Strict CP policy.** This branch follows the Component Pascal report: a
+procedure value may only be a named, non-local procedure.  Method values and
+values of procedures local to another procedure are rejected at compile time
+with error 165 (`This procedure cannot be used as a procedure value`) in
+assignments, procedure-typed actual parameters, `RETURN` and `=`/`#`
+comparisons.  The corresponding checks live in `ExprDesc.CheckProcValue` plus
+its call sites in `ExprDesc` and `StatDesc`; the `strict_*` test cases cover
+them.
+
+**Tests.** `tests/gpcp/cases/proceq_*` (including the imported MIT oberonc cases
+`proceq_ref_oberonc`, `procvars_ref_*`, `procsig_ref_equal`),
+`proceq_regression`, `proceq_special_abi` (named `-special` host classes and
+the `ProcKey` wrapper ABI), `array_proc_call`, `var_proc_param_function`,
+`import_literal_named_type`, the `oberonc_*` general suite and the `strict_*`
+cases (including method/field and nested/array); 78/78 cases pass on the
+`fixProcEqual` branch.
