@@ -31,13 +31,18 @@ public final class TrapError extends Error
     public static final int WITH = 129;
     public static final int CASE = 130;
     public static final int INVARIANT = 100;
+    public static final int OVERFLOW = 138;
+    public static final int DIV_ZERO = 139;
 
     public final int code;
     public final String text;
 
-    /* C3 (optional): snapshot of locals at the trap site; may be null. */
+    /* C3: snapshot of locals at the trap site; may be null. */
     public final String[] names;
     public final Object[] values;
+
+    /* Full Java stack trace captured when the trap object was constructed. */
+    public final StackTraceElement[] javaTrace;
 
     public TrapError(int code)
     {
@@ -56,12 +61,18 @@ public final class TrapError extends Error
         this.text = text;
         this.names = names;
         this.values = values;
+        this.javaTrace = getStackTrace();
     }
 
     /** Parse the code out of the message produced by JavaMaker. */
     public TrapError(String msg)
     {
         this(parseCode(msg), msg);
+    }
+
+    public TrapError(String msg, String[] names, Object[] values)
+    {
+        this(parseCode(msg), msg, names, values);
     }
 
     private static int parseCode(String m)
@@ -80,9 +91,32 @@ public final class TrapError extends Error
         return INVARIANT;
     }
 
+    /** Render the complete Java stack trace captured at the trap site. */
+    public String javaTraceText()
+    {
+        StringBuilder b = new StringBuilder();
+        if (javaTrace != null) {
+            for (StackTraceElement e : javaTrace) {
+                b.append("    at ").append(e).append('\n');
+            }
+        }
+        return b.toString();
+    }
+
     @Override
     public String toString()
     {
-        return "CP.CPJrts.TrapError: TRAP " + code + " [" + getMessage() + "]";
+        StringBuilder b = new StringBuilder();
+        b.append("CP.CPJrts.TrapError: TRAP ").append(code)
+         .append(" [").append(getMessage()).append("]");
+        if (names != null) {
+            b.append(" locals=");
+            for (int i = 0; i < names.length; i++) {
+                if (i != 0) b.append(',');
+                b.append(names[i]);
+            }
+        }
+        b.append('\n').append(javaTraceText());
+        return b.toString();
     }
 }

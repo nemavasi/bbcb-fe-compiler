@@ -584,8 +584,11 @@ distinguish from an ordinary command error.
 **What changed.**
 
 - new runtime class `CP.CPJrts.TrapError extends Error`; it carries the trap
-  `code`, the original `text`, and optional local-variable snapshots (the
-  fields are present for the later C3 step, but unused here);
+  `code`, the original `text`, the local-variable snapshot (`names`/`values`),
+  and the complete Java stack trace captured at the trap site;
+- `TrapError.toString()` includes `locals=...` when a snapshot exists and then
+  renders the Java stack trace (`at CP...`); `javaTraceText()` exposes the same
+  text separately;
 - `CPJrts.Halt(int)` throws `new TrapError(code)`;
 - `HALT(n)` calls `CP/CPJrts/CPJrts.Halt(I)V` in all three JVM emitters
   (`-asm8`, `-legacy`, `-jasmin`); the `java/lang/System` branch was removed;
@@ -607,15 +610,36 @@ distinguish from an ordinary command error.
   module bodies (both `main` and `<clinit>`) still get exactly one return
   instruction.  This keeps functions such as `BEGIN HALT(126); RETURN f END`
   verifiable;
+- `HALT` also builds a snapshot of the current procedure's locals and calls
+  `CP/CPJrts/CPJrts.HaltTrap(I[Ljava/lang/String;[Ljava/lang/Object;)V`
+  (`HaltTrap`); `ASSERT` uses `TrapMsg(String,String[],Object[])` and keeps the
+  original `"Assertion failure ..."` text.  `PushTrapFrame` is implemented for
+  `-asm8` (`AsmUtil`); `-legacy`/`-jasmin` pass two nulls.  Scalar values are
+  boxed, references (`arrays`, `records`, `pointers`, procedure values) are
+  stored as-is;
+- checked `INTEGER`/`LONGINT` arithmetic: `+`, `-`, unary `-`, `ABS`, `INC`
+  and `DEC` go through `CPJrts.AddI/SubI/MulI/NegI` (and the `L` variants)
+  when overflow checking is enabled.  The helpers use `Math.*Exact` and throw
+  `TrapError(138)`.  `-nocheck` keeps the original wrapping `iadd`/`ladd`
+  behaviour;
+- division/modulo (`DIV`, `MOD`) trap `139` for a zero divisor and for
+  `MIN / -1` (the JVM itself returns `MIN` for the latter);
 - `jars/cprts.jar`, `sources/libs/java/cprts.jar` and
   `libs/CP/CPJrts/` now contain `TrapError.class` and the updated
   `CPJrts.class`.
 
 **Tests.** New `trap_*` cases cover `HALT(7)`, `HALT(128)`, `HALT` in
-`<clinit>`, `HALT` in a function, `ASSERT` with and without a code, `CASE`,
-`WITH`, a void procedure ending in `HALT`, and the `-legacy` emitter for both
-`HALT` and `ASSERT`.  The runner understands `expect-trap.txt` (expected
-stderr substring, module must exit non-zero) and `flags.txt` (extra compiler
-flags); 89/89 cases pass.  `javap` confirms
-`CP/CPJrts/CPJrts.Halt:(I)V` and `CP/CPJrts/TrapError`, with no
+`<clinit>`, `HALT` in a function and in a void procedure, `ASSERT` with and
+without a code, `CASE`, `WITH`, the `-legacy` emitter, local-variable
+snapshots for `HALT` and `ASSERT` (`trap_snapshot`, `trap_assert_snapshot`),
+`INTEGER`/`LONGINT` overflow, `INC` overflow, `DIV`/`MOD` by zero and
+`MIN / -1`, and `-nocheck`.  The runner understands `expect-trap.txt` (one or
+more expected stderr substrings; the module must exit non-zero) and
+`flags.txt` (extra compiler flags); 98/98 cases pass.  `javap`
+confirms `CP/CPJrts/CPJrts.Halt/HaltTrap`, `CP/CPJrts/TrapError`, and no
 `java/lang/System.exit`.
+
+**Still not covered.** REAL traps 140–143 (inf/NaN/overflow/underflow) are not
+emitted; the plan recommends leaving them until a separate pass because they
+would add a check after every real operation.  `FOR`-loop counter increments
+keep the unchecked JVM `iadd`/`ladd`.

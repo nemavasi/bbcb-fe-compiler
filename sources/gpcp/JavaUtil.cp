@@ -98,6 +98,10 @@ MODULE JavaUtil;
        LoadTp1* = 20;	(* getClassByOrd  *)
        LoadTp2* = 21;	(* getClassByName *)
        GetTpM* = 22;
+       HaltTrap* = 23;   (* trap with local snapshot *)
+       AddI* = 24; SubI* = 25; MulI* = 26; NegI* = 27;
+       AddL* = 28; SubL* = 29; MulL* = 30; NegL* = 31;
+       TrapMsg* = 32;    (* trap with message + local snapshot *)
 
 (* ============================================================ *)
 
@@ -243,6 +247,10 @@ MODULE JavaUtil;
   PROCEDURE (jf : JavaFile)DefLabC*(lab : Label; 
                                     IN c : ARRAY OF CHAR),NEW,ABSTRACT;
   PROCEDURE (jf : JavaFile)CodeInc*(localIx,incVal : INTEGER),NEW,ABSTRACT;
+
+ (* HALT(n) local snapshot: leaves String[] names and Object[] values
+    on the stack (or two nulls when the emitter has no snapshot). *)
+  PROCEDURE (jf : JavaFile)PushTrapFrame*(),NEW,ABSTRACT;
   PROCEDURE (jf : JavaFile)CodeT*(code : INTEGER; ty : Sym.Type),NEW,ABSTRACT;
 
   PROCEDURE (jf : JavaFile)CodeSwitch*(low,high : INTEGER; 
@@ -298,6 +306,7 @@ MODULE JavaUtil;
   PROCEDURE (jf : JavaFile)Alloc1d*(elTp : Sym.Type),NEW,ABSTRACT;
   PROCEDURE (jf : JavaFile)VarInit*(var : Sym.Idnt),NEW,ABSTRACT;
   PROCEDURE (jf : JavaFile)Trap*(IN str : ARRAY OF CHAR),NEW,ABSTRACT;
+  PROCEDURE (jf : JavaFile)TrapWithLocals*(IN str : ARRAY OF CHAR),NEW,ABSTRACT;
   PROCEDURE (jf : JavaFile)CaseTrap*(i : INTEGER),NEW,ABSTRACT;
   PROCEDURE (jf : JavaFile)WithTrap*(id : Sym.Idnt),NEW,ABSTRACT;
   PROCEDURE (jf : JavaFile)Line*(nm : INTEGER),NEW,ABSTRACT;

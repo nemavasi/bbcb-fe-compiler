@@ -248,8 +248,8 @@ MODULE ClassUtil;
 
   VAR
         typeArr   : ARRAY 16 OF INTEGER;
-        procNames : ARRAY 24 OF L.CharOpen;
-        procSigs  : ARRAY 24 OF L.CharOpen;
+        procNames : ARRAY 40 OF L.CharOpen;
+        procSigs  : ARRAY 40 OF L.CharOpen;
 
         object-       : L.CharOpen;
         init-         : L.CharOpen;
@@ -1886,6 +1886,13 @@ CSt.PrintLn( "DefLabC: " + c );
 
 (* ============================================================ *)
 
+ (* -legacy emitter: no local snapshot, HaltTrap gets two null arrays. *)
+  PROCEDURE (cf : ClassFile)PushTrapFrame*();
+  BEGIN
+    cf.Code(Jvm.opc_aconst_null);
+    cf.Code(Jvm.opc_aconst_null)
+  END PushTrapFrame;
+
   PROCEDURE (cf : ClassFile)CallGetClass*();
   BEGIN
     cf.CallS(Jvm.opc_invokevirtual, object, getCls, noArgClass, 1, 1);
@@ -1904,6 +1911,16 @@ CSt.PrintLn( "DefLabC: " + c );
     cf.CallS(Jvm.opc_invokespecial,errorClass,init,errorInitSig,2,0);
     cf.Code(Jvm.opc_athrow);
   END Trap;
+
+(* ============================================================ *)
+
+  PROCEDURE (cf : ClassFile)TrapWithLocals*(IN str : ARRAY OF CHAR);
+  BEGIN
+    cf.PushStr(L.strToCharOpen(str));
+    cf.PushTrapFrame();
+    cf.CallRTS(J.TrapMsg,3,1);
+    cf.Code(Jvm.opc_athrow)
+  END TrapWithLocals;
 
 (* ============================================================ *)
 
@@ -2377,6 +2394,16 @@ BEGIN
   procNames[J.StrLP1] := L.strToCharOpen("ChrArrLplus1");
   procNames[J.StrVal] := L.strToCharOpen("ChrArrStrCopy");
   procNames[J.Halt] := L.strToCharOpen("Halt");
+  procNames[J.HaltTrap] := L.strToCharOpen("HaltTrap");
+  procNames[J.TrapMsg] := L.strToCharOpen("TrapMsg");
+  procNames[J.AddI] := L.strToCharOpen("AddI");
+  procNames[J.SubI] := L.strToCharOpen("SubI");
+  procNames[J.MulI] := L.strToCharOpen("MulI");
+  procNames[J.NegI] := L.strToCharOpen("NegI");
+  procNames[J.AddL] := L.strToCharOpen("AddL");
+  procNames[J.SubL] := L.strToCharOpen("SubL");
+  procNames[J.MulL] := L.strToCharOpen("MulL");
+  procNames[J.NegL] := L.strToCharOpen("NegL");
   procNames[J.LoadTp1] := L.strToCharOpen("getClassByOrd");
   procNames[J.LoadTp2] := L.strToCharOpen("getClassByName");
   getCls := L.strToCharOpen("getClass");
@@ -2406,6 +2433,16 @@ BEGIN
   procSigs[J.StrLP1] := procSigs[J.StrLen];
   procSigs[J.StrVal] := L.strToCharOpen("([C[C)V");
   procSigs[J.Halt] := L.strToCharOpen("(I)V");
+  procSigs[J.HaltTrap] := L.strToCharOpen("(I[Ljava/lang/String;[Ljava/lang/Object;)V");
+  procSigs[J.TrapMsg] := L.strToCharOpen("(Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/Object;)LCP/CPJrts/TrapError;");
+  procSigs[J.AddI] := IIretI;
+  procSigs[J.SubI] := IIretI;
+  procSigs[J.MulI] := IIretI;
+  procSigs[J.NegI] := L.strToCharOpen("(I)I");
+  procSigs[J.AddL] := JJretJ;
+  procSigs[J.SubL] := JJretJ;
+  procSigs[J.MulL] := JJretJ;
+  procSigs[J.NegL] := L.strToCharOpen("(J)J");
   procSigs[J.LoadTp1] := L.strToCharOpen("(I)Ljava/lang/Class;");
   procSigs[J.LoadTp2] := L.strToCharOpen(
                                "(Ljava/lang/String;)Ljava/lang/Class;");

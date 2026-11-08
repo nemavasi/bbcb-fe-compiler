@@ -145,18 +145,20 @@ run_case() {
     runmod=$(head -n1 "$work/run.txt" | tr -d '[:space:]')
     actual="$work/actual.txt"
     if [ -f "$work/expect-trap.txt" ]; then
-      want=$(cat "$work/expect-trap.txt")
       if ( cd "$work" &&
            "$JAVA" -Dfile.encoding=UTF-8 -cp "$work:$ROOT/libs" \
              "CP.$runmod.$runmod" ) >"$work/actual.txt" 2>"$work/run.err"; then
         echo "  expected trap, but the module exited normally"
         return 1
       fi
-      if ! grep -qF -- "$want" "$work/run.err"; then
-        echo "  expected trap message not found: $want"
-        sed 's/^/    /' "$work/run.err"
-        return 1
-      fi
+      while IFS= read -r want; do
+        [ -n "$want" ] || continue
+        if ! grep -qF -- "$want" "$work/run.err"; then
+          echo "  expected trap message not found: $want"
+          sed 's/^/    /' "$work/run.err"
+          return 1
+        fi
+      done < "$work/expect-trap.txt"
       return 0
     fi
     if ! ( cd "$work" &&

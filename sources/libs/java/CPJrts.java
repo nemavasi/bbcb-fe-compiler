@@ -36,6 +36,9 @@ public class CPJrts
 
 	public static int CpModI(int lVal, int rVal)
 	{
+            if (rVal == 0 ||
+                (lVal == Integer.MIN_VALUE && rVal == -1))
+                throw new TrapError(TrapError.DIV_ZERO);
            // A correction is required if the signs of
            // the two operands are different, but the
            // remainder is non-zero. Inc rem by rVal.
@@ -47,6 +50,9 @@ public class CPJrts
 
 	public static int CpDivI(int lVal, int rVal)
 	{
+            if (rVal == 0 ||
+                (lVal == Integer.MIN_VALUE && rVal == -1))
+                throw new TrapError(TrapError.DIV_ZERO);
            // A correction is required if the signs of
            // the two operands are different, but the
            // remainder is non-zero. Dec quo by 1.
@@ -59,6 +65,9 @@ public class CPJrts
 
 	public static long CpModL(long lVal, long rVal)
 	{
+            if (rVal == 0 ||
+                (lVal == Long.MIN_VALUE && rVal == -1))
+                throw new TrapError(TrapError.DIV_ZERO);
            // A correction is required if the signs of
            // the two operands are different, but the
            // remainder is non-zero. Inc rem by rVal.
@@ -70,6 +79,9 @@ public class CPJrts
 
 	public static long CpDivL(long lVal, long rVal)
 	{
+            if (rVal == 0 ||
+                (lVal == Long.MIN_VALUE && rVal == -1))
+                throw new TrapError(TrapError.DIV_ZERO);
            // A correction is required if the signs of
            // the two operands are different, but the
            // remainder is non-zero. Dec quo by 1.
@@ -89,6 +101,52 @@ public class CPJrts
 	{
 	    throw new TrapError(code);
 	}
+
+	/* HALT with a snapshot of the local variables at the trap site. */
+	public static void HaltTrap(int code, String[] names, Object[] values)
+	{
+	    throw new TrapError(code, "TRAP " + code, names, values);
+	}
+
+	/* ASSERT/CASE/WITH with a message and a local snapshot.  The return
+	   type lets the emitter follow the call with athrow. */
+	public static TrapError TrapMsg(String msg, String[] names, Object[] values)
+	{
+	    throw new TrapError(msg, names, values);
+	}
+
+/* ==================================================================== *
+ *		Checked INTEGER/LONGINT arithmetic (trap 138)		*
+ * ==================================================================== */
+
+	private static TrapError Ovf()
+	{
+	    return new TrapError(TrapError.OVERFLOW);
+	}
+
+	public static int AddI(int a, int b)
+	{ try { return Math.addExact(a, b); } catch (ArithmeticException e) { throw Ovf(); } }
+
+	public static int SubI(int a, int b)
+	{ try { return Math.subtractExact(a, b); } catch (ArithmeticException e) { throw Ovf(); } }
+
+	public static int MulI(int a, int b)
+	{ try { return Math.multiplyExact(a, b); } catch (ArithmeticException e) { throw Ovf(); } }
+
+	public static int NegI(int a)
+	{ try { return Math.negateExact(a); } catch (ArithmeticException e) { throw Ovf(); } }
+
+	public static long AddL(long a, long b)
+	{ try { return Math.addExact(a, b); } catch (ArithmeticException e) { throw Ovf(); } }
+
+	public static long SubL(long a, long b)
+	{ try { return Math.subtractExact(a, b); } catch (ArithmeticException e) { throw Ovf(); } }
+
+	public static long MulL(long a, long b)
+	{ try { return Math.multiplyExact(a, b); } catch (ArithmeticException e) { throw Ovf(); } }
+
+	public static long NegL(long a)
+	{ try { return Math.negateExact(a); } catch (ArithmeticException e) { throw Ovf(); } }
 
 /* -------------------------------------------------------------------- */
 

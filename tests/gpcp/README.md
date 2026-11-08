@@ -200,10 +200,12 @@ with the stock `jars/gpcp.jar` (illegal signature) and on the stage-1 compiler
 ## Traps (ADR-261)
 
 `HALT` and `ASSERT`/`CASE`/`WITH` now throw `CP.CPJrts.TrapError` instead of
-calling `System.exit`/throwing a plain `Exception`.  The runner supports
-`expect-trap.txt`: the module must exit non-zero and stderr must contain the
-given substring (so a return to `System.exit` produces empty stderr and fails
-the case).
+calling `System.exit`/throwing a plain `Exception`.  `HALT` also calls
+`HaltTrap` with a snapshot of the procedure's locals; `TrapError.toString()`
+contains `locals=...` and the complete Java stack trace.  The runner supports
+`expect-trap.txt`: the module must exit non-zero and stderr must contain every
+non-empty line from that file (so a return to `System.exit` produces empty
+stderr and fails the case).
 
 | Case | What is checked |
 |---|---|
@@ -218,9 +220,19 @@ the case).
 | `trap_with` | `WITH` without `ELSE` → `TRAP 129` |
 | `trap_halt_legacy` | the same `HALT` path through the `-legacy` emitter |
 | `trap_assert_legacy` | `ASSERT`/`TrapError` through the `-legacy` emitter |
+| `trap_snapshot` | `HaltTrap` reports `locals=a1,a2,a3,a4` and the Java stack trace |
+| `trap_assert_snapshot` | `TrapMsg` preserves the assertion text, reports locals and the trace |
+| `trap_overflow` | `MAX(INTEGER)+1` → `TRAP 138` |
+| `trap_overflow_long` | `MAX(LONGINT)+1` → `TRAP 138` |
+| `trap_overflow_inc` | `INC(MAX(INTEGER))` → `TRAP 138` |
+| `trap_overflow_nocheck` | `-nocheck` wraps instead of trapping |
+| `trap_div` | `MIN(INTEGER) DIV -1` → `TRAP 139` |
+| `trap_div_zero` | `DIV 0` → `TRAP 139` |
+| `trap_mod` | `MIN(INTEGER) MOD -1` → `TRAP 139` |
 
-`javap` on `trap_halt` shows `CP/CPJrts/CPJrts.Halt:(I)V` and no
+`javap` on `trap_halt` shows `CP/CPJrts/CPJrts.Halt/HaltTrap` and no
 `java/lang/System.exit`; `trap_assert_*` show `new CP/CPJrts/TrapError`.
+REAL traps 140–143 remain unimplemented (per the plan).
 
 ## Not covered
 
