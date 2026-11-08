@@ -40,6 +40,8 @@ Each directory under `cases/` is one test:
 | `special.txt` | modules to compile with `-special` (native `SYSTEM MODULE` interfaces) |
 | `run.txt` | module to execute after compilation; run as `CP.<Module>.<Module>` |
 | `expected.txt` | exact expected stdout of `run.txt`; without it the case is compile-only |
+| `expect-trap.txt` | expected substring in stderr; the module must exit non-zero (used for `HALT`/`ASSERT`/`CASE`/`WITH` traps) |
+| `flags.txt` | additional compiler flags, one per line (for example `-legacy`) |
 | `compile-error.txt` | expected compiler diagnostic substring; at least one module must fail with it and nothing is executed |
 | `prepare.py` | optional generator run before compilation (used for the >1 MiB UTF-8 source) |
 
@@ -194,6 +196,31 @@ procedure-type host-class work in stage 1 removed it, so this case is the
 regression guard rather than a separate code change.  It was verified to fail
 with the stock `jars/gpcp.jar` (illegal signature) and on the stage-1 compiler
 (anonymous-vs-named comparison).
+
+## Traps (ADR-261)
+
+`HALT` and `ASSERT`/`CASE`/`WITH` now throw `CP.CPJrts.TrapError` instead of
+calling `System.exit`/throwing a plain `Exception`.  The runner supports
+`expect-trap.txt`: the module must exit non-zero and stderr must contain the
+given substring (so a return to `System.exit` produces empty stderr and fails
+the case).
+
+| Case | What is checked |
+|---|---|
+| `trap_halt` | `HALT(7)` → `TrapError: TRAP 7`, no `System.exit` |
+| `trap_halt_128` | `HALT(128)` keeps code 128 |
+| `trap_halt_clinit` | `HALT` in `<clinit>` (body without `CPmain`) |
+| `trap_halt_in_function` | `HALT` inside a function with a `RETURN` after it stays verifiable |
+| `trap_halt_in_procedure` | a void procedure ending in `HALT` still gets a `return` |
+| `trap_assert_code` | `ASSERT(FALSE, 20)` → `TRAP 20` |
+| `trap_assert_plain` | `ASSERT(FALSE)` → `TRAP 0` (BlackBox `AssertTrap`) |
+| `trap_case` | `CASE` without `ELSE` → `TRAP 130` |
+| `trap_with` | `WITH` without `ELSE` → `TRAP 129` |
+| `trap_halt_legacy` | the same `HALT` path through the `-legacy` emitter |
+| `trap_assert_legacy` | `ASSERT`/`TrapError` through the `-legacy` emitter |
+
+`javap` on `trap_halt` shows `CP/CPJrts/CPJrts.Halt:(I)V` and no
+`java/lang/System.exit`; `trap_assert_*` show `new CP/CPJrts/TrapError`.
 
 ## Not covered
 

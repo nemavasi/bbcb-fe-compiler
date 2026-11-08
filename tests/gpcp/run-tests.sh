@@ -76,7 +76,7 @@ run_case() {
   local src=$1
   local name work m log actual runmod s
   local expected_err="" compile_failed=0
-  local -a mods=() specials=() flags=()
+  local -a mods=() specials=() flags=() extra=()
 
   name=$(basename "$src")
   work="$STAGE/cases/$name"
@@ -102,10 +102,14 @@ run_case() {
   if [ -f "$work/special.txt" ]; then
     mapfile -t specials < "$work/special.txt"
   fi
+  if [ -f "$work/flags.txt" ]; then
+    mapfile -t extra < "$work/flags.txt"
+  fi
 
   for m in "${mods[@]}"; do
     [ -n "$m" ] || continue
     flags=(-nowarn -list- -asm8 "-symdir:$work" "-clsdir:$work")
+    if [ ${#extra[@]} -gt 0 ]; then flags+=("${extra[@]}"); fi
     if is_special "$m" "${specials[@]}"; then
       flags+=(-special)
     fi
@@ -140,6 +144,21 @@ run_case() {
   if [ -f "$work/run.txt" ]; then
     runmod=$(head -n1 "$work/run.txt" | tr -d '[:space:]')
     actual="$work/actual.txt"
+    if [ -f "$work/expect-trap.txt" ]; then
+      want=$(cat "$work/expect-trap.txt")
+      if ( cd "$work" &&
+           "$JAVA" -Dfile.encoding=UTF-8 -cp "$work:$ROOT/libs" \
+             "CP.$runmod.$runmod" ) >"$work/actual.txt" 2>"$work/run.err"; then
+        echo "  expected trap, but the module exited normally"
+        return 1
+      fi
+      if ! grep -qF -- "$want" "$work/run.err"; then
+        echo "  expected trap message not found: $want"
+        sed 's/^/    /' "$work/run.err"
+        return 1
+      fi
+      return 0
+    fi
     if ! ( cd "$work" &&
            "$JAVA" -Dfile.encoding=UTF-8 -cp "$work:$ROOT/libs" \
              "CP.$runmod.$runmod" ) >"$actual" 2>"$work/run.err"; then

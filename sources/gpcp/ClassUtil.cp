@@ -274,7 +274,6 @@ MODULE ClassUtil;
         exceptType-   : L.CharOpen;
         srcFileName   : L.CharOpen;
         copy-         : L.CharOpen;
-        sysClass      : L.CharOpen;
         charClass     : L.CharOpen;
         mathClass     : L.CharOpen;
         IIretI        : L.CharOpen;
@@ -1879,8 +1878,6 @@ CSt.PrintLn( "DefLabC: " + c );
       className := charClass;
     ELSIF ix = J.DFloor THEN 
       className := mathClass;
-    ELSIF ix = J.SysExit THEN 
-      className := sysClass;
     ELSE
       className := rtsClass;
     END;
@@ -2345,7 +2342,7 @@ BEGIN
 (*
   errorClass := L.strToCharOpen("java/lang/Error"); 
  *)
-  errorClass := L.strToCharOpen("java/lang/Exception"); 
+  errorClass := L.strToCharOpen("CP/CPJrts/TrapError"); 
   errorInitSig := L.strToCharOpen("(Ljava/lang/String;)V");
   rtsClass := L.strToCharOpen("CP/CPJrts/CPJrts");
   caseTrap := L.strToCharOpen("CaseMesg");
@@ -2358,7 +2355,6 @@ BEGIN
   CPmainClass := L.strToCharOpen("CP/CPmain/CPmain");
   putArgs := L.strToCharOpen("PutArgs");
   copy := L.strToCharOpen("__copy__");
-  sysClass := L.strToCharOpen("java/lang/System");
   charClass := L.strToCharOpen("java/lang/Character");
   mathClass := L.strToCharOpen("java/lang/Math");
 
@@ -2380,7 +2376,7 @@ BEGIN
   procNames[J.StrCatSS] := L.strToCharOpen("StrStrToString");
   procNames[J.StrLP1] := L.strToCharOpen("ChrArrLplus1");
   procNames[J.StrVal] := L.strToCharOpen("ChrArrStrCopy");
-  procNames[J.SysExit] := L.strToCharOpen("exit");
+  procNames[J.Halt] := L.strToCharOpen("Halt");
   procNames[J.LoadTp1] := L.strToCharOpen("getClassByOrd");
   procNames[J.LoadTp2] := L.strToCharOpen("getClassByName");
   getCls := L.strToCharOpen("getClass");
@@ -2409,7 +2405,7 @@ BEGIN
                    "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
   procSigs[J.StrLP1] := procSigs[J.StrLen];
   procSigs[J.StrVal] := L.strToCharOpen("([C[C)V");
-  procSigs[J.SysExit] := L.strToCharOpen("(I)V");
+  procSigs[J.Halt] := L.strToCharOpen("(I)V");
   procSigs[J.LoadTp1] := L.strToCharOpen("(I)Ljava/lang/Class;");
   procSigs[J.LoadTp2] := L.strToCharOpen(
                                "(Ljava/lang/String;)Ljava/lang/Class;");

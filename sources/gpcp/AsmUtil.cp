@@ -150,10 +150,10 @@ MODULE AsmUtil;
       clinitStr,  (* "<clinit>"            *)
       copyStr,    (* "__copy__"            *)
       jleStr,     (* "java/lang/Exception" *)
+      jTrapStr,   (* "CP/CPJrts/TrapError" *)
       jlmStr,     (* "java/lang/Math"      *)
       jlcStr,     (* "java/lang/Class"     *)
       jlchStr,    (* "java/lang/Character" *)
-      jlsyStr,    (* "java/lang/System"    *)
       rtsStr,     (* "CP/CPJrts/CPJrts"    *)
       cpMain,     (* "CP/CPmain/CPmain"    *)
      (* ------------------------------------ *)
@@ -1339,8 +1339,6 @@ MODULE AsmUtil;
        classStr := jlchStr        (* java/lang/Character *)
     ELSIF ix = Ju.DFloor THEN
        classStr := jlmStr         (* java/lang/Math      *)
-    ELSIF ix = Ju.SysExit THEN
-       classStr := jlsyStr        (* java/lang/System    *)
     ELSE
        classStr := rtsStr         (* CP/CPJrts/CPJrts    *);
     END;
@@ -1810,12 +1808,12 @@ MODULE AsmUtil;
   BEGIN
     emtr.CheckFrame();
     mv := emtr.thisMv;
-    mv.visitTypeInsn( ASM.Opcodes.`NEW, jleStr );
+    mv.visitTypeInsn( ASM.Opcodes.`NEW, jTrapStr );
     mv.visitInsn( ASM.Opcodes.DUP );
     mv.visitLdcInsn( MKSTR(str) );
     emtr.mthFrame.DeltaEvalDepth( 3 );
     mv.visitMethodInsn(
-        ASM.Opcodes.INVOKESPECIAL, jleStr, initStr, strToVoid, FALSE );
+        ASM.Opcodes.INVOKESPECIAL, jTrapStr, initStr, strToVoid, FALSE );
     emtr.mthFrame.DeltaEvalDepth( -2 );
     mv.visitInsn( ASM.Opcodes.ATHROW );
     emtr.mthFrame.InvalidateEvalStack();
@@ -1829,14 +1827,14 @@ MODULE AsmUtil;
   BEGIN
     emtr.CheckFrame();
     mv := emtr.thisMv;
-    mv.visitTypeInsn( ASM.Opcodes.`NEW, jleStr );
+    mv.visitTypeInsn( ASM.Opcodes.`NEW, jTrapStr );
     mv.visitInsn( ASM.Opcodes.DUP );
     emtr.LoadLocal( i, Blt.intTp );
     emtr.mthFrame.DeltaEvalDepth( 3 );
     mv.visitMethodInsn(
         ASM.Opcodes.INVOKESTATIC, rtsStr, caseTrap, caseTrapSig, FALSE );
     mv.visitMethodInsn(
-        ASM.Opcodes.INVOKESPECIAL, jleStr, initStr, strToVoid, FALSE );
+        ASM.Opcodes.INVOKESPECIAL, jTrapStr, initStr, strToVoid, FALSE );
     emtr.mthFrame.DeltaEvalDepth( -2 );
     mv.visitInsn( ASM.Opcodes.ATHROW );
     emtr.mthFrame.InvalidateEvalStack();
@@ -1850,14 +1848,14 @@ MODULE AsmUtil;
   BEGIN
     emtr.CheckFrame();
     mv := emtr.thisMv;
-    mv.visitTypeInsn( ASM.Opcodes.`NEW, jleStr ); (* +1 *)
-    mv.visitInsn( ASM.Opcodes.DUP );              (* +2 *)
-    emtr.GetVar( id );                            (* +3 *)
+    mv.visitTypeInsn( ASM.Opcodes.`NEW, jTrapStr ); (* +1 *)
+    mv.visitInsn( ASM.Opcodes.DUP );                (* +2 *)
+    emtr.GetVar( id );                              (* +3 *)
     emtr.mthFrame.DeltaEvalDepth( 3 );
     mv.visitMethodInsn(
         ASM.Opcodes.INVOKESTATIC, rtsStr, withTrap, withTrapSig, FALSE );
     mv.visitMethodInsn(
-        ASM.Opcodes.INVOKESPECIAL, jleStr, initStr, strToVoid, FALSE );
+        ASM.Opcodes.INVOKESPECIAL, jTrapStr, initStr, strToVoid, FALSE );
     emtr.mthFrame.DeltaEvalDepth( -2 );
     mv.visitInsn( ASM.Opcodes.ATHROW );
     emtr.mthFrame.InvalidateEvalStack();
@@ -1936,10 +1934,10 @@ BEGIN  (* Module Body *)
   clinitStr     := MKSTR( "<clinit>"            );
   copyStr       := MKSTR( "__copy__"            );
   jleStr        := MKSTR( "java/lang/Exception" );
+  jTrapStr      := MKSTR( "CP/CPJrts/TrapError" );
   jlmStr        := MKSTR( "java/lang/Math"      );
   jlcStr        := MKSTR( "java/lang/Class"     );
   jlchStr       := MKSTR( "java/lang/Character" );
-  jlsyStr       := MKSTR( "java/lang/System"    );
 
   cpMain        := MKSTR( "CP/CPmain/CPmain"    );
   rtsStr        := MKSTR( "CP/CPJrts/CPJrts"    );
@@ -1989,7 +1987,7 @@ BEGIN  (* Module Body *)
   procNames[Ju.StrCatSS] := Lv.strToCharOpen("StrStrToString");
   procNames[Ju.StrLP1] := Lv.strToCharOpen("ChrArrLplus1");
   procNames[Ju.StrVal] := Lv.strToCharOpen("ChrArrStrCopy");
-  procNames[Ju.SysExit] := Lv.strToCharOpen("exit");
+  procNames[Ju.Halt] := Lv.strToCharOpen("Halt");
   procNames[Ju.LoadTp1] := Lv.strToCharOpen("getClassByOrd");
   procNames[Ju.LoadTp2] := Lv.strToCharOpen("getClassByName");
 
@@ -2018,13 +2016,13 @@ BEGIN  (* Module Body *)
                    "(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
   procSigs[Ju.StrLP1] := procSigs[Ju.StrLen];
   procSigs[Ju.StrVal] := Lv.strToCharOpen("([C[C)V");
-  procSigs[Ju.SysExit] := Lv.strToCharOpen("(I)V");
+  procSigs[Ju.Halt] := Lv.strToCharOpen("(I)V");
   procSigs[Ju.LoadTp1] := Lv.strToCharOpen("(I)Ljava/lang/Class;");
   procSigs[Ju.LoadTp2] := Lv.strToCharOpen(
                                "(Ljava/lang/String;)Ljava/lang/Class;");
 
   procRetS[Ju.StrVal] := NIL;
-  procRetS[Ju.SysExit] := NIL;
+  procRetS[Ju.Halt] := NIL;
   procRetS[Ju.StrToChrs] := NIL;
   procRetS[Ju.StrCheck] := NIL;
 

@@ -570,3 +570,52 @@ the `ProcKey` wrapper ABI), `array_proc_call`, `var_proc_param_function`,
 `import_literal_named_type`, the `oberonc_*` general suite and the `strict_*`
 cases (including method/field and nested/array); 78/78 cases pass on the
 `fixProcEqual` branch.
+
+---
+
+## 12. `HALT` is a trap, not `System.exit` (ADR-261)
+
+**Before.** `HALT(n)` compiled to `java/lang/System.exit(I)V`, so a violated
+invariant in the port terminated the whole application instead of producing a
+BlackBox-style trap.  `ASSERT`, `CASE` without `ELSE` and `WITH` without
+`ELSE` threw plain `java/lang/Exception`, which the platform could not
+distinguish from an ordinary command error.
+
+**What changed.**
+
+- new runtime class `CP.CPJrts.TrapError extends Error`; it carries the trap
+  `code`, the original `text`, and optional local-variable snapshots (the
+  fields are present for the later C3 step, but unused here);
+- `CPJrts.Halt(int)` throws `new TrapError(code)`;
+- `HALT(n)` calls `CP/CPJrts/CPJrts.Halt(I)V` in all three JVM emitters
+  (`-asm8`, `-legacy`, `-jasmin`); the `java/lang/System` branch was removed;
+- `ASSERT`/`CASE`/`WITH` traps use `CP/CPJrts/TrapError`; `TrapError(String)`
+  parses the existing message prefixes, so the message texts are unchanged:
+
+  | message | `code` |
+  |---|---|
+  | `HALT(n)` | `n` |
+  | `Assertion failure n` | `n` |
+  | `Assertion failure <Mod>:<line>` | `0` (`AssertTrap`) |
+  | `CASE-trap: selector = i` | `130` |
+  | `WITH else-trap: type = T` | `129` |
+
+- `TrapError extends Error`, so it is **not** caught by CP `RESCUE`/`TRY`
+  (those still catch `java/lang/Exception`); `jleStr`/`exceptType` and
+  `CPJrts.CaseMesg`/`WithMesg` are unchanged;
+- `HALT` no longer falls through: the statement emitter stops after it, and
+  module bodies (both `main` and `<clinit>`) still get exactly one return
+  instruction.  This keeps functions such as `BEGIN HALT(126); RETURN f END`
+  verifiable;
+- `jars/cprts.jar`, `sources/libs/java/cprts.jar` and
+  `libs/CP/CPJrts/` now contain `TrapError.class` and the updated
+  `CPJrts.class`.
+
+**Tests.** New `trap_*` cases cover `HALT(7)`, `HALT(128)`, `HALT` in
+`<clinit>`, `HALT` in a function, `ASSERT` with and without a code, `CASE`,
+`WITH`, a void procedure ending in `HALT`, and the `-legacy` emitter for both
+`HALT` and `ASSERT`.  The runner understands `expect-trap.txt` (expected
+stderr substring, module must exit non-zero) and `flags.txt` (extra compiler
+flags); 89/89 cases pass.  `javap` confirms
+`CP/CPJrts/CPJrts.Halt:(I)V` and `CP/CPJrts/TrapError`, with no
+`java/lang/System.exit`.

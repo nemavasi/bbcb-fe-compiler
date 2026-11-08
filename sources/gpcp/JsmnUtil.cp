@@ -56,6 +56,8 @@ MODULE JsmnUtil;
 	jlError*    = jlExcept;
 	mkExcept*   = "java/lang/Exception/<init>(Ljava/lang/String;)V";
 	mkError*    = mkExcept;
+	jlTrap*     = "CP/CPJrts/TrapError";
+	mkTrap*     = "CP/CPJrts/TrapError/<init>(Ljava/lang/String;)V";
 	putArgStr*  = "CP/CPmain/CPmain/PutArgs([Ljava/lang/String;)V";
 
 (* ============================================================ *)
@@ -1253,11 +1255,11 @@ MODULE JsmnUtil;
 
   PROCEDURE (os : JsmnFile)Trap*(IN str : ARRAY OF CHAR);
   BEGIN
-    os.CodeS(Jvm.opc_new, jlError);
+    os.CodeS(Jvm.opc_new, jlTrap);
     os.Code(Jvm.opc_dup);
 (* Do we need the quotes? *)
     os.PushStr(LitValue.strToCharOpen('"' + str + '"'));
-    os.CallS(Jvm.opc_invokespecial, mkError,2,0);
+    os.CallS(Jvm.opc_invokespecial, mkTrap,2,0);
     os.Code(Jvm.opc_athrow);
   END Trap;
 
@@ -1265,12 +1267,12 @@ MODULE JsmnUtil;
 
   PROCEDURE (os : JsmnFile)CaseTrap*(i : INTEGER);
   BEGIN
-    os.CodeS(Jvm.opc_new, jlError);
+    os.CodeS(Jvm.opc_new, jlTrap);
     os.Code(Jvm.opc_dup);
     os.LoadLocal(i, G.intTp);
     os.CallS(Jvm.opc_invokestatic, 
 		"CP/CPJrts/CPJrts/CaseMesg(I)Ljava/lang/String;",1,1);
-    os.CallS(Jvm.opc_invokespecial, mkError,2,0);
+    os.CallS(Jvm.opc_invokespecial, mkTrap,2,0);
     os.Code(Jvm.opc_athrow);
   END CaseTrap;
 
@@ -1278,12 +1280,12 @@ MODULE JsmnUtil;
 
   PROCEDURE (os : JsmnFile)WithTrap*(id : Sy.Idnt);
   BEGIN
-    os.CodeS(Jvm.opc_new, jlError);
+    os.CodeS(Jvm.opc_new, jlTrap);
     os.Code(Jvm.opc_dup);
     os.GetVar(id);
     os.CallS(Jvm.opc_invokestatic, 
 	"CP/CPJrts/CPJrts/WithMesg(Ljava/lang/Object;)Ljava/lang/String;",1,1);
-    os.CallS(Jvm.opc_invokespecial, mkError,2,0);
+    os.CallS(Jvm.opc_invokespecial, mkTrap,2,0);
     os.Code(Jvm.opc_athrow);
   END WithTrap;
 
@@ -1555,7 +1557,7 @@ BEGIN
   rtsProcs[J.StrCatSS] := "CP/CPJrts/CPJrts/StrStrToString(Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;";
   rtsProcs[J.StrLP1] := "CP/CPJrts/CPJrts/ChrArrLplus1([C)I";
   rtsProcs[J.StrVal] := "CP/CPJrts/CPJrts/ChrArrStrCopy([C[C)V";
-  rtsProcs[J.SysExit] := "java/lang/System/exit(I)V";
+  rtsProcs[J.Halt] := "CP/CPJrts/CPJrts/Halt(I)V";
   rtsProcs[J.LoadTp1] := "CP/CPJrts/CPJrts/getClassByOrd(I)Ljava/lang/Class;";
   rtsProcs[J.LoadTp2] := 
 	"CP/CPJrts/CPJrts/getClassByName(Ljava/lang/String;)Ljava/lang/Class;";

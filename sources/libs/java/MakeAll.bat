@@ -17,6 +17,7 @@ REM THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" 
 REM this compiles all of the standard java-sourced libraries for GPCP
 javac -d . Console.java
 javac -d . CPJ.java
+javac -d . TrapError.java
 javac -d . CPJrts.java
 javac -d . ProcKey.java
 javac -d . XHR.java

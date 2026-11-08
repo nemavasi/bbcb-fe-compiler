@@ -651,7 +651,7 @@ MODULE JavaMaker;
       *   module body is emitted as <clinit>
       *)
       this.EmitStat(this.mod.modBody, returned);
-      out.VoidTail();
+      IF returned THEN out.VoidTail() ELSE out.EndProc() END;
     END;
    (* 
     *  Emit all of the static procedures
@@ -2907,8 +2907,9 @@ MODULE JavaMaker;
    (* --------------------------- *)
     | Bi.haltP :
         out.PushInt(intValue(arg0));
-        out.CallRTS(Ju.SysExit,1,0);
+        out.CallRTS(Ju.Halt,1,0);
         out.PushJunkAndReturn();
+        ok := FALSE;   (* HALT does not fall through *)
    (* --------------------------- *)
     | Bi.throwP :
         IF CSt.ntvExc.assignCompat(arg0) THEN

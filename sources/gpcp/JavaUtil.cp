@@ -94,7 +94,7 @@ MODULE JavaUtil;
        StrCatSS* = 16; 
        StrLP1* = 17; 
        StrVal* = 18;
-       SysExit* = 19;
+       Halt* = 19;
        LoadTp1* = 20;	(* getClassByOrd  *)
        LoadTp2* = 21;	(* getClassByName *)
        GetTpM* = 22;
@@ -2386,7 +2386,12 @@ CSt.Message( "made mNm name " + mNm^ );
     *  if that is necessary, and calls return.
     *)
     ret := NIL;
-    IF jf.theP = NIL THEN RETURN END;         (* PREMATURE EXIT FOR MOD BODY *)
+    IF jf.theP = NIL THEN
+     (* HALT/ASSERT in a module body: main/<clinit> is void, but a trap
+        has no fall-through path, so emit the return explicitly. *)
+      jf.Code(Jvm.opc_return);
+      RETURN
+    END;
     frm := jf.theP.type(Ty.Procedure);
    (*
     *  First, we must find the (jvm) return type.
@@ -2415,6 +2420,9 @@ CSt.Message( "made mNm name " + mNm^ );
         jf.Code(Jvm.opc_aconst_null);
       END;
       jf.Return(ret);
+    ELSE
+     (* void procedure: HALT has no fall-through, so close it explicitly *)
+      jf.Code(Jvm.opc_return);
     END;
   END PushJunkAndReturn;
 

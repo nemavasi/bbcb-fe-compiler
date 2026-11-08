@@ -84,6 +84,14 @@ public class CPJrts
  *		Various string and char-array helpers			*
  * ==================================================================== */
 
+	/* HALT is a trap, not System.exit: ADR-261. */
+	public static void Halt(int code)
+	{
+	    throw new TrapError(code);
+	}
+
+/* -------------------------------------------------------------------- */
+
 	public static String CaseMesg(int i)
 	{
 	    String s = "CASE-trap: selector = " + i;
