@@ -13,3 +13,6 @@
 
 # Compiler-generated symbol files (cpmake / gpcp)
 /sources/gpcp/*.cps
+
+# Default mkdistro output directory
+/sources/gpcp/gpcp-JVM/
