@@ -29,6 +29,11 @@ KEEP=1 tests/gpcp/run-tests.sh          # keep the temporary build tree
 The script prints `PASS`/`FAIL` per case and exits non-zero on any failure.
 Temporary files go to `$TMPDIR` (or `/tmp`) and are removed afterwards.
 
+Generated runtime classes are not taken from the repository: the runner
+compiles `sources/libs/java/*.java` into a temporary tree and puts it before
+the bootstrap `jars/cprts.jar` / `libs` on the classpath.  This keeps the
+committed tree source-only for the runtime support.
+
 ## Case format
 
 Each directory under `cases/` is one test:

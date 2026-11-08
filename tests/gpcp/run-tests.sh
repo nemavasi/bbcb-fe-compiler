@@ -17,11 +17,13 @@ set -u
 ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 CASE_ROOT="$ROOT/tests/gpcp/cases"
 JAVA=${JAVA:-java}
+JAVAC=${JAVAC:-javac}
 JARS="$ROOT/jars"
 CPSYM=".:$ROOT/symfiles:$ROOT/symfiles/JvmSystem"
 STAGE=${STAGE:-${TMPDIR:-/tmp}/gpcp-tests.$$}
 KEEP=${KEEP:-0}
-COMPILER_CP="$STAGE/compiler:$JARS/gpcp.jar:$JARS/asm-5.1.jar:$JARS/cprts.jar"
+RTS_DIR="$STAGE/rts"
+COMPILER_CP="$STAGE/compiler:$RTS_DIR:$JARS/gpcp.jar:$JARS/asm-5.1.jar:$JARS/cprts.jar"
 
 filters=()
 while [ $# -gt 0 ]; do
@@ -57,6 +59,22 @@ build_compiler() {
          CPSYM="$CPSYM" "$JAVA" -jar "$JARS/cpmake.jar" \
            -all -nowarn -asm8 -clsdir:"$STAGE/compiler" gpcp ) >"$log" 2>&1; then
     echo "compiler build failed:" >&2
+    cat "$log" >&2
+    return 1
+  fi
+  echo "    ok"
+}
+
+build_rts() {
+  local log="$STAGE/rts-build.log"
+  echo "==> building runtime support from sources/libs/java"
+  rm -rf "$RTS_DIR"
+  mkdir -p "$RTS_DIR"
+  # Runtime classes are generated, not committed.  Build them into the
+  # temporary tree so the tests do not depend on jars/cprts.jar contents.
+  if ! "$JAVAC" -encoding UTF-8 -cp "$RTS_DIR" -d "$RTS_DIR" \
+         "$ROOT"/sources/libs/java/*.java >"$log" 2>&1; then
+    echo "runtime build failed:" >&2
     cat "$log" >&2
     return 1
   fi
@@ -146,7 +164,7 @@ run_case() {
     actual="$work/actual.txt"
     if [ -f "$work/expect-trap.txt" ]; then
       if ( cd "$work" &&
-           "$JAVA" -Dfile.encoding=UTF-8 -cp "$work:$ROOT/libs" \
+           "$JAVA" -Dfile.encoding=UTF-8 -cp "$work:$RTS_DIR:$ROOT/libs" \
              "CP.$runmod.$runmod" ) >"$work/actual.txt" 2>"$work/run.err"; then
         echo "  expected trap, but the module exited normally"
         return 1
@@ -162,7 +180,7 @@ run_case() {
       return 0
     fi
     if ! ( cd "$work" &&
-           "$JAVA" -Dfile.encoding=UTF-8 -cp "$work:$ROOT/libs" \
+           "$JAVA" -Dfile.encoding=UTF-8 -cp "$work:$RTS_DIR:$ROOT/libs" \
              "CP.$runmod.$runmod" ) >"$actual" 2>"$work/run.err"; then
       echo "  run failed: CP.$runmod.$runmod"
       sed 's/^/    /' "$work/run.err"
@@ -178,6 +196,7 @@ run_case() {
   return 0
 }
 
+build_rts || exit 1
 build_compiler || exit 1
 
 total=0 passed=0 failed=0 skipped=0
