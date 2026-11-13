@@ -91,7 +91,7 @@ MODULE JsmnUtil;
 
   VAR   typeName  : ARRAY 15 OF TypeNameString;	(* base type names *)
 	typeChar  : ARRAY 15 OF CHAR;		(* base type chars *)
-        rtsProcs  : ARRAY 40 OF ProcNameString; 
+        rtsProcs  : ARRAY 48 OF ProcNameString; 
 
 (* ============================================================ *)
 (*			Constructor Method			*)
@@ -1577,6 +1577,14 @@ BEGIN
   rtsProcs[J.Halt] := "CP/CPJrts/CPJrts/Halt(I)V";
   rtsProcs[J.HaltTrap] := "CP/CPJrts/CPJrts/HaltTrap(I[Ljava/lang/String;[Ljava/lang/Object;)V";
   rtsProcs[J.TrapMsg] := "CP/CPJrts/CPJrts/TrapMsg(Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/Object;)LCP/CPJrts/TrapError;";
+  rtsProcs[J.AddD] := "CP/CPJrts/CPJrts/AddD(DD)D";
+  rtsProcs[J.SubD] := "CP/CPJrts/CPJrts/SubD(DD)D";
+  rtsProcs[J.MulD] := "CP/CPJrts/CPJrts/MulD(DD)D";
+  rtsProcs[J.DivD] := "CP/CPJrts/CPJrts/DivD(DD)D";
+  rtsProcs[J.AddF] := "CP/CPJrts/CPJrts/AddF(FF)F";
+  rtsProcs[J.SubF] := "CP/CPJrts/CPJrts/SubF(FF)F";
+  rtsProcs[J.MulF] := "CP/CPJrts/CPJrts/MulF(FF)F";
+  rtsProcs[J.DivF] := "CP/CPJrts/CPJrts/DivF(FF)F";
   rtsProcs[J.AddI] := "CP/CPJrts/CPJrts/AddI(II)I";
   rtsProcs[J.SubI] := "CP/CPJrts/CPJrts/SubI(II)I";
   rtsProcs[J.MulI] := "CP/CPJrts/CPJrts/MulI(II)I";

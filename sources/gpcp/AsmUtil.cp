@@ -182,9 +182,9 @@ MODULE AsmUtil;
       (* Kludge to make NIL typecheck with array formal *)
       jlsEmptyArr : Def.JlsArr;
 
-  VAR procNames  : ARRAY 40 OF Lv.CharOpen;
-      procSigs   : ARRAY 40 OF Lv.CharOpen;
-      procRetS   : ARRAY 40 OF Lv.CharOpen;
+  VAR procNames  : ARRAY 48 OF Lv.CharOpen;
+      procSigs   : ARRAY 48 OF Lv.CharOpen;
+      procRetS   : ARRAY 48 OF Lv.CharOpen;
       getClass   : Lv.CharOpen;
       IIretI     : Lv.CharOpen;
       JJretJ     : Lv.CharOpen;
@@ -2127,6 +2127,14 @@ BEGIN  (* Module Body *)
   procNames[Ju.Halt] := Lv.strToCharOpen("Halt");
   procNames[Ju.HaltTrap] := Lv.strToCharOpen("HaltTrap");
   procNames[Ju.TrapMsg] := Lv.strToCharOpen("TrapMsg");
+  procNames[Ju.AddD] := Lv.strToCharOpen("AddD");
+  procNames[Ju.SubD] := Lv.strToCharOpen("SubD");
+  procNames[Ju.MulD] := Lv.strToCharOpen("MulD");
+  procNames[Ju.DivD] := Lv.strToCharOpen("DivD");
+  procNames[Ju.AddF] := Lv.strToCharOpen("AddF");
+  procNames[Ju.SubF] := Lv.strToCharOpen("SubF");
+  procNames[Ju.MulF] := Lv.strToCharOpen("MulF");
+  procNames[Ju.DivF] := Lv.strToCharOpen("DivF");
   procNames[Ju.AddI] := Lv.strToCharOpen("AddI");
   procNames[Ju.SubI] := Lv.strToCharOpen("SubI");
   procNames[Ju.MulI] := Lv.strToCharOpen("MulI");
@@ -2166,6 +2174,14 @@ BEGIN  (* Module Body *)
   procSigs[Ju.Halt] := Lv.strToCharOpen("(I)V");
   procSigs[Ju.HaltTrap] := Lv.strToCharOpen("(I[Ljava/lang/String;[Ljava/lang/Object;)V");
   procSigs[Ju.TrapMsg] := Lv.strToCharOpen("(Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/Object;)LCP/CPJrts/TrapError;");
+  procSigs[Ju.AddD] := Lv.strToCharOpen("(DD)D");
+  procSigs[Ju.SubD] := procSigs[Ju.AddD];
+  procSigs[Ju.MulD] := procSigs[Ju.AddD];
+  procSigs[Ju.DivD] := procSigs[Ju.AddD];
+  procSigs[Ju.AddF] := Lv.strToCharOpen("(FF)F");
+  procSigs[Ju.SubF] := procSigs[Ju.AddF];
+  procSigs[Ju.MulF] := procSigs[Ju.AddF];
+  procSigs[Ju.DivF] := procSigs[Ju.AddF];
   procSigs[Ju.AddI] := IIretI;
   procSigs[Ju.SubI] := IIretI;
   procSigs[Ju.MulI] := IIretI;
@@ -2182,6 +2198,14 @@ BEGIN  (* Module Body *)
   procRetS[Ju.Halt] := NIL;
   procRetS[Ju.HaltTrap] := NIL;
   procRetS[Ju.TrapMsg] := Lv.strToCharOpen("LCP/CPJrts/TrapError;");
+  procRetS[Ju.AddD] := Lv.strToCharOpen("D");
+  procRetS[Ju.SubD] := procRetS[Ju.AddD];
+  procRetS[Ju.MulD] := procRetS[Ju.AddD];
+  procRetS[Ju.DivD] := procRetS[Ju.AddD];
+  procRetS[Ju.AddF] := Lv.strToCharOpen("F");
+  procRetS[Ju.SubF] := procRetS[Ju.AddF];
+  procRetS[Ju.MulF] := procRetS[Ju.AddF];
+  procRetS[Ju.DivF] := procRetS[Ju.AddF];
   procRetS[Ju.AddI] := Lv.strToCharOpen("I");
   procRetS[Ju.SubI] := procRetS[Ju.AddI];
   procRetS[Ju.MulI] := procRetS[Ju.AddI];

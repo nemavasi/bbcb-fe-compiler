@@ -102,6 +102,8 @@ MODULE JavaUtil;
        AddI* = 24; SubI* = 25; MulI* = 26; NegI* = 27;
        AddL* = 28; SubL* = 29; MulL* = 30; NegL* = 31;
        TrapMsg* = 32;    (* trap with message + local snapshot *)
+       AddD* = 33; SubD* = 34; MulD* = 35; DivD* = 36;
+       AddF* = 37; SubF* = 38; MulF* = 39; DivF* = 40;
 
 (* ============================================================ *)
 

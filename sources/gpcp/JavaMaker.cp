@@ -1853,7 +1853,11 @@ MODULE JavaMaker;
         dNum := dst(Ty.Base).tpOrd;
         e.PushValue(lOp, dst);
         e.PushValue(rOp, dst);
-        IF ovfChecked(out) & ((dNum = Ty.intN) OR (dNum = Ty.lIntN)) THEN
+        IF ovfChecked(out) & (dNum = Ty.realN) THEN
+          out.CallRTS(Ju.AddD,4,2)
+        ELSIF ovfChecked(out) & (dNum = Ty.sReaN) THEN
+          out.CallRTS(Ju.AddF,2,1)
+        ELSIF ovfChecked(out) & ((dNum = Ty.intN) OR (dNum = Ty.lIntN)) THEN
           IF dNum = Ty.lIntN THEN out.CallRTS(Ju.AddL,4,2)
           ELSE out.CallRTS(Ju.AddI,2,1) END
         ELSE
@@ -1864,7 +1868,11 @@ MODULE JavaMaker;
         dNum := dst(Ty.Base).tpOrd;
         e.PushValue(lOp, dst);
         e.PushValue(rOp, dst);
-        IF ovfChecked(out) & ((dNum = Ty.intN) OR (dNum = Ty.lIntN)) THEN
+        IF ovfChecked(out) & (dNum = Ty.realN) THEN
+          out.CallRTS(Ju.SubD,4,2)
+        ELSIF ovfChecked(out) & (dNum = Ty.sReaN) THEN
+          out.CallRTS(Ju.SubF,2,1)
+        ELSIF ovfChecked(out) & ((dNum = Ty.intN) OR (dNum = Ty.lIntN)) THEN
           IF dNum = Ty.lIntN THEN out.CallRTS(Ju.SubL,4,2)
           ELSE out.CallRTS(Ju.SubI,2,1) END
         ELSE
@@ -1875,7 +1883,11 @@ MODULE JavaMaker;
         dNum := dst(Ty.Base).tpOrd;
         e.PushValue(lOp, dst);
         e.PushValue(rOp, dst);
-        IF ovfChecked(out) & ((dNum = Ty.intN) OR (dNum = Ty.lIntN)) THEN
+        IF ovfChecked(out) & (dNum = Ty.realN) THEN
+          out.CallRTS(Ju.MulD,4,2)
+        ELSIF ovfChecked(out) & (dNum = Ty.sReaN) THEN
+          out.CallRTS(Ju.MulF,2,1)
+        ELSIF ovfChecked(out) & ((dNum = Ty.intN) OR (dNum = Ty.lIntN)) THEN
           IF dNum = Ty.lIntN THEN out.CallRTS(Ju.MulL,4,2)
           ELSE out.CallRTS(Ju.MulI,2,1) END
         ELSE
@@ -1883,9 +1895,16 @@ MODULE JavaMaker;
         END;
     (* -------------------------------- *)
     | Xp.slash :
+        dNum := dst(Ty.Base).tpOrd;
         e.PushValue(lOp, dst);
         e.PushValue(rOp, dst);
-        out.Code(Jvm.opc_ddiv);
+        IF ovfChecked(out) & (dNum = Ty.realN) THEN
+          out.CallRTS(Ju.DivD,4,2)
+        ELSIF ovfChecked(out) & (dNum = Ty.sReaN) THEN
+          out.CallRTS(Ju.DivF,2,1)
+        ELSE
+          out.Code(Jvm.opc_ddiv)
+        END;
     (* -------------------------------- *)
     | Xp.modOp :
         dNum := dst(Ty.Base).tpOrd;
