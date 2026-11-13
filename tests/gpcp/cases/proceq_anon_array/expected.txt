@@ -1,0 +1,4 @@
+ok   anon-array-call-0
+ok   anon-array-call-1
+ok   anon-array-eq
+ok   anon-array-neq

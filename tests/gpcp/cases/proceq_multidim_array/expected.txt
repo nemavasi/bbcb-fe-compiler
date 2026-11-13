@@ -1,0 +1,4 @@
+ok   multi-call-00
+ok   multi-call-11
+ok   multi-eq
+ok   multi-neq

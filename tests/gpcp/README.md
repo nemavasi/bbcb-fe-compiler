@@ -185,8 +185,22 @@ explicitly excluded.  These cases must fail to compile with error 165
 | `strict_nested_compare` | a local procedure in a `=`/`#` comparison |
 | `strict_nested_return` | a local procedure returned as a procedure value |
 | `strict_nested_array` | a local procedure assigned to a procedure-typed array element |
+| `strict_nested_field` | a local procedure assigned to a procedure-typed record field |
 | `strict_method_value` | a bound method (`f := t.Add`) |
 | `strict_method_field` | a bound method assigned to a procedure-typed record field |
+| `strict_method_param` | a bound method passed to a procedure-typed formal |
+| `strict_method_compare` | a bound method in a `=`/`#` comparison |
+| `strict_method_return` | a bound method returned as a procedure value |
+| `strict_method_array` | a bound method assigned to a procedure-typed array element |
+| `strict_predeclared_value` | a predeclared procedure (`f := INC`) |
+
+Valid strict-CP edge cases:
+
+| Case | What is checked |
+|---|---|
+| `proceq_anon_array` | array of an anonymous procedure type: assignment, direct `a[i](x)` calls, equality |
+| `proceq_multidim_array` | two-dimensional array of procedure values |
+| `var_proc_param_anon` | `VAR`/`OUT` parameters of an anonymous procedure type in functions (`TypeOfBox`) |
 
 ## Imported procedure literals (stage 3)
 
