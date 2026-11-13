@@ -265,11 +265,17 @@ stderr and fails the case).
 | `trap_real_short_add_overflow` | `MAX(SHORTREAL) + MAX(SHORTREAL)` → `TRAP 142` |
 | `trap_real_short_sub_overflow` | `MAX(SHORTREAL) - (-MAX(SHORTREAL))` → `TRAP 142` |
 | `trap_real_nocheck` | `-nocheck` keeps unchecked real arithmetic |
+| `trap_for_overflow_up` | ascending `INTEGER` `FOR` counter overflow → `TRAP 138` |
+| `trap_for_overflow_down` | descending `INTEGER` `FOR` counter overflow → `TRAP 138` |
+| `trap_for_overflow_long_up` | ascending `LONGINT` `FOR` counter overflow → `TRAP 138` |
+| `trap_for_overflow_long_down` | descending `LONGINT` `FOR` counter overflow → `TRAP 138` |
+| `trap_for_nocheck` | `-nocheck` wraps the `FOR` counter instead of trapping |
 
 `javap` on `trap_halt` shows `CP/CPJrts/CPJrts.Halt/HaltTrap` and no
 `java/lang/System.exit`; `trap_assert_*` show `new CP/CPJrts/TrapError`.
 `trap_real_*` show `CP/CPJrts/CPJrts.AddD/SubD/MulD/DivD` (and `F`
-variants); `-nocheck` keeps `dadd`/`dmul`/`ddiv`.
+variants); `trap_for_*` show `AddI`/`AddL`; `-nocheck` keeps
+`iadd`/`ladd`/`dadd`/`dmul`/`ddiv`.
 
 ## Not covered
 

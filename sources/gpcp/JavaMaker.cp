@@ -3536,7 +3536,11 @@ MODULE JavaMaker;
         END;
         out.GetVar(cVar);   (* (top) cv,hi  *)
         out.PushLong(step);
-        out.Code(Jvm.opc_ladd);   (* (top) cv',hi     *)
+        IF ovfChecked(out) THEN
+          out.CallRTS(Ju.AddL,4,2)
+        ELSE
+          out.Code(Jvm.opc_ladd)
+        END;                      (* (top) cv',hi     *)
         out.Code(Jvm.opc_dup2);   (* (top) cv',cv',hi *)
         SetVar(cVar, TRUE, out);
         e.DoCmp(Xp.greEq,  lpLb, Bi.lIntTp);
@@ -3605,7 +3609,11 @@ MODULE JavaMaker;
         END;
         out.GetVar(cVar);   (* (top) cv,hi  *)
         out.PushLong(step);
-        out.Code(Jvm.opc_ladd);   (* (top) cv',hi     *)
+        IF ovfChecked(out) THEN
+          out.CallRTS(Ju.AddL,4,2)
+        ELSE
+          out.Code(Jvm.opc_ladd)
+        END;                      (* (top) cv',hi     *)
         out.Code(Jvm.opc_dup2);   (* (top) cv',cv',hi *)
         SetVar(cVar, TRUE, out);
         e.DoCmp(Xp.lessEq, lpLb, Bi.lIntTp);
@@ -3672,7 +3680,11 @@ MODULE JavaMaker;
       END;
       out.GetVar(cVar);   (* (top) cv,hi  *)
       out.PushInt(step);
-      out.Code(Jvm.opc_iadd);   (* (top) cv',hi     *)
+      IF ovfChecked(out) THEN
+        out.CallRTS(Ju.AddI,2,1)
+      ELSE
+        out.Code(Jvm.opc_iadd)
+      END;                      (* (top) cv',hi     *)
       out.Code(Jvm.opc_dup);    (* (top) cv',cv',hi *)
       SetVar(cVar, FALSE, out);
       e.DoCmp(Xp.greEq, lpLb, Bi.intTp);
@@ -3732,7 +3744,11 @@ MODULE JavaMaker;
       END;
       out.GetVar(cVar);   (* (top) cv,hi  *)
       out.PushInt(step);
-      out.Code(Jvm.opc_iadd);   (* (top) cv',hi     *)
+      IF ovfChecked(out) THEN
+        out.CallRTS(Ju.AddI,2,1)
+      ELSE
+        out.Code(Jvm.opc_iadd)
+      END;                      (* (top) cv',hi     *)
       out.Code(Jvm.opc_dup);    (* (top) cv',cv',hi *)
       SetVar(cVar, FALSE, out);
       e.DoCmp(Xp.lessEq, lpLb, Bi.intTp);
