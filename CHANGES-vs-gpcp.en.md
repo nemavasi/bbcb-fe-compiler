@@ -570,7 +570,8 @@ the `ProcKey` wrapper ABI), `array_proc_call`, `var_proc_param_function`,
 `import_literal_named_type`, the `oberonc_*` general suite, the `strict_*`
 cases (method/field/parameter/comparison/return/array, nested field/array and
 predeclared procedures), and the valid strict edge cases `proceq_anon_array`,
-`proceq_multidim_array`, `var_proc_param_anon`; 107/107 cases pass.
+`proceq_multidim_array`, `proceq_anon_field`, `proceq_anon_param`,
+`var_proc_param_anon`; 109/109 cases pass.
 
 ---
 

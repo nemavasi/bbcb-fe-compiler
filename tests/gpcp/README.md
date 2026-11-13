@@ -200,6 +200,8 @@ Valid strict-CP edge cases:
 |---|---|
 | `proceq_anon_array` | array of an anonymous procedure type: assignment, direct `a[i](x)` calls, equality |
 | `proceq_multidim_array` | two-dimensional array of procedure values |
+| `proceq_anon_field` | record field of an anonymous procedure type |
+| `proceq_anon_param` | value parameter of an anonymous procedure type |
 | `var_proc_param_anon` | `VAR`/`OUT` parameters of an anonymous procedure type in functions (`TypeOfBox`) |
 
 ## Imported procedure literals (stage 3)
