@@ -632,6 +632,9 @@ distinguish from an ordinary command error.
   `140` infinite result (including division by zero), `141` underflow,
   `142` overflow and `143` NaN/invalid operation.  `-nocheck` keeps the
   original `dadd`/`fadd`/`ddiv`/`fdiv` instructions;
+- `FOR`-loop counter increments use `CPJrts.AddI`/`AddL` when checking is
+  enabled, for both ascending and descending loops and for `INTEGER`/
+  `LONGINT` control variables; `-nocheck` keeps `iadd`/`ladd`;
 - runtime classes are **built from** `sources/libs/java/*.java`
   (`MakeRtsJar`, or the test runner); generated `cprts.jar`/`.class` files are
   not committed.  `jars/cprts.jar` remains the unchanged bootstrap jar; the
@@ -648,12 +651,11 @@ without a code, `CASE`, `WITH`, the `-legacy` emitter, local-variable
 snapshots for `HALT` and `ASSERT` (`trap_snapshot`, `trap_assert_snapshot`),
 `INTEGER`/`LONGINT` overflow, `INC` overflow, `DIV`/`MOD` by zero and
 `MIN / -1`, `REAL`/`SHORTREAL` division by zero, zero/subnormal underflow,
-overflow (add/sub/mul) and NaN, and `-nocheck`.  The runner understands
-`expect-trap.txt` (one or more expected stderr substrings; the module must
-exit non-zero) and `flags.txt` (extra compiler flags); 124/124 cases pass.
-`javap` confirms
+overflow (add/sub/mul) and NaN, `FOR` counter overflow (up/down, INTEGER/
+LONGINT), and `-nocheck`.  The runner understands `expect-trap.txt` (one or
+more expected stderr substrings; the module must exit non-zero) and
+`flags.txt` (extra compiler flags); 129/129 cases pass.  `javap` confirms
 `CP/CPJrts/CPJrts.Halt/HaltTrap`, `CP/CPJrts/TrapError`, the `AddD/DivD/...`
 helpers, and no `java/lang/System.exit`.
 
-**Still not covered.** `FOR`-loop counter increments keep the unchecked JVM
-`iadd`/`ladd`.
+
