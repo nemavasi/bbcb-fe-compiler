@@ -567,9 +567,11 @@ them.
 `proceq_ref_oberonc`, `procvars_ref_*`, `procsig_ref_equal`),
 `proceq_regression`, `proceq_special_abi` (named `-special` host classes and
 the `ProcKey` wrapper ABI), `array_proc_call`, `var_proc_param_function`,
-`import_literal_named_type`, the `oberonc_*` general suite and the `strict_*`
-cases (including method/field and nested/array); 78/78 cases pass on the
-`fixProcEqual` branch.
+`import_literal_named_type`, the `oberonc_*` general suite, the `strict_*`
+cases (method/field/parameter/comparison/return/array, nested field/array and
+predeclared procedures), and the valid strict edge cases `proceq_anon_array`,
+`proceq_multidim_array`, `proceq_anon_field`, `proceq_anon_param`,
+`var_proc_param_anon`; 109/109 cases pass.
 
 ---
 

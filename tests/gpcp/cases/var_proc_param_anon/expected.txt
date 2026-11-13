@@ -1,0 +1,3 @@
+ok   anon-var-proc-param
+ok   anon-out-proc-param-result
+ok   anon-out-proc-param-assigned
