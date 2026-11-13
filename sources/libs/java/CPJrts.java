@@ -148,6 +148,65 @@ public class CPJrts
 	public static long NegL(long a)
 	{ try { return Math.negateExact(a); } catch (ArithmeticException e) { throw Ovf(); } }
 
+/* ==================================================================== *
+ *		Checked REAL/SHORTREAL arithmetic (traps 140-143)	*
+ * ==================================================================== */
+
+	private static final int OP_ADD = 0;
+	private static final int OP_SUB = 1;
+	private static final int OP_MUL = 2;
+	private static final int OP_DIV = 3;
+
+	private static double CheckD(double r, double a, double b, int op)
+	{
+	    if (Double.isNaN(r))
+	        throw new TrapError(TrapError.REAL_UNDEFINED);
+	    if (Double.isInfinite(r)) {
+	        if (op == OP_DIV && b == 0.0)
+	            throw new TrapError(TrapError.REAL_INF);
+	        throw new TrapError(TrapError.REAL_OVERFLOW);
+	    }
+	    if (r != 0.0 && Math.abs(r) < Double.MIN_NORMAL)
+	        throw new TrapError(TrapError.REAL_UNDERFLOW);
+	    if (r == 0.0) {
+	        if (op == OP_MUL && a != 0.0 && b != 0.0)
+	            throw new TrapError(TrapError.REAL_UNDERFLOW);
+	        if (op == OP_DIV && a != 0.0)
+	            throw new TrapError(TrapError.REAL_UNDERFLOW);
+	    }
+	    return r;
+	}
+
+	private static float CheckF(float r, float a, float b, int op)
+	{
+	    if (Float.isNaN(r))
+	        throw new TrapError(TrapError.REAL_UNDEFINED);
+	    if (Float.isInfinite(r)) {
+	        if (op == OP_DIV && b == 0.0f)
+	            throw new TrapError(TrapError.REAL_INF);
+	        throw new TrapError(TrapError.REAL_OVERFLOW);
+	    }
+	    if (r != 0.0f && Math.abs(r) < Float.MIN_NORMAL)
+	        throw new TrapError(TrapError.REAL_UNDERFLOW);
+	    if (r == 0.0f) {
+	        if (op == OP_MUL && a != 0.0f && b != 0.0f)
+	            throw new TrapError(TrapError.REAL_UNDERFLOW);
+	        if (op == OP_DIV && a != 0.0f)
+	            throw new TrapError(TrapError.REAL_UNDERFLOW);
+	    }
+	    return r;
+	}
+
+	public static double AddD(double a, double b) { return CheckD(a + b, a, b, OP_ADD); }
+	public static double SubD(double a, double b) { return CheckD(a - b, a, b, OP_SUB); }
+	public static double MulD(double a, double b) { return CheckD(a * b, a, b, OP_MUL); }
+	public static double DivD(double a, double b) { return CheckD(a / b, a, b, OP_DIV); }
+
+	public static float AddF(float a, float b) { return CheckF(a + b, a, b, OP_ADD); }
+	public static float SubF(float a, float b) { return CheckF(a - b, a, b, OP_SUB); }
+	public static float MulF(float a, float b) { return CheckF(a * b, a, b, OP_MUL); }
+	public static float DivF(float a, float b) { return CheckF(a / b, a, b, OP_DIV); }
+
 /* -------------------------------------------------------------------- */
 
 	public static String CaseMesg(int i)

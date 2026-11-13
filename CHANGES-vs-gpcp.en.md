@@ -626,6 +626,12 @@ distinguish from an ordinary command error.
   behaviour;
 - division/modulo (`DIV`, `MOD`) trap `139` for a zero divisor and for
   `MIN / -1` (the JVM itself returns `MIN` for the latter);
+- checked `REAL`/`SHORTREAL` arithmetic: `+`, `-`, `*` and `/` go through
+  `CPJrts.AddD/SubD/MulD/DivD` (and the `F` variants) when checking is
+  enabled.  The helpers map the Java FP result to BlackBox traps:
+  `140` infinite result (including division by zero), `141` underflow,
+  `142` overflow and `143` NaN/invalid operation.  `-nocheck` keeps the
+  original `dadd`/`fadd`/`ddiv`/`fdiv` instructions;
 - runtime classes are **built from** `sources/libs/java/*.java`
   (`MakeRtsJar`, or the test runner); generated `cprts.jar`/`.class` files are
   not committed.  `jars/cprts.jar` remains the unchanged bootstrap jar; the
@@ -641,13 +647,13 @@ distinguish from an ordinary command error.
 without a code, `CASE`, `WITH`, the `-legacy` emitter, local-variable
 snapshots for `HALT` and `ASSERT` (`trap_snapshot`, `trap_assert_snapshot`),
 `INTEGER`/`LONGINT` overflow, `INC` overflow, `DIV`/`MOD` by zero and
-`MIN / -1`, and `-nocheck`.  The runner understands `expect-trap.txt` (one or
-more expected stderr substrings; the module must exit non-zero) and
-`flags.txt` (extra compiler flags); 98/98 cases pass.  `javap`
-confirms `CP/CPJrts/CPJrts.Halt/HaltTrap`, `CP/CPJrts/TrapError`, and no
-`java/lang/System.exit`.
+`MIN / -1`, `REAL`/`SHORTREAL` division by zero, zero/subnormal underflow,
+overflow (add/sub/mul) and NaN, and `-nocheck`.  The runner understands
+`expect-trap.txt` (one or more expected stderr substrings; the module must
+exit non-zero) and `flags.txt` (extra compiler flags); 124/124 cases pass.
+`javap` confirms
+`CP/CPJrts/CPJrts.Halt/HaltTrap`, `CP/CPJrts/TrapError`, the `AddD/DivD/...`
+helpers, and no `java/lang/System.exit`.
 
-**Still not covered.** REAL traps 140–143 (inf/NaN/overflow/underflow) are not
-emitted; the plan recommends leaving them until a separate pass because they
-would add a check after every real operation.  `FOR`-loop counter increments
-keep the unchecked JVM `iadd`/`ladd`.
+**Still not covered.** `FOR`-loop counter increments keep the unchecked JVM
+`iadd`/`ladd`.

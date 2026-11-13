@@ -250,10 +250,26 @@ stderr and fails the case).
 | `trap_div` | `MIN(INTEGER) DIV -1` → `TRAP 139` |
 | `trap_div_zero` | `DIV 0` → `TRAP 139` |
 | `trap_mod` | `MIN(INTEGER) MOD -1` → `TRAP 139` |
+| `trap_real_div_zero` | `REAL / 0.0` → `TRAP 140` |
+| `trap_real_underflow` | `REAL * REAL` underflow to zero → `TRAP 141` |
+| `trap_real_subnormal` | `REAL * REAL` subnormal result → `TRAP 141` |
+| `trap_real_overflow` | `MAX(REAL) * 2.0` → `TRAP 142` |
+| `trap_real_nan` | `0.0 / 0.0` → `TRAP 143` |
+| `trap_real_add_overflow` | `MAX(REAL) + MAX(REAL)` → `TRAP 142` |
+| `trap_real_sub_overflow` | `MAX(REAL) - (-MAX(REAL))` → `TRAP 142` |
+| `trap_real_div_underflow` | `1.0E-300 / 1.0E300` → `TRAP 141` |
+| `trap_real_short_div_zero` | `SHORTREAL` division by zero → `TRAP 140` |
+| `trap_real_short_overflow` | `MAX(SHORTREAL) * 2.0` → `TRAP 142` |
+| `trap_real_short_underflow` | `SHORTREAL * SHORTREAL` underflow to zero → `TRAP 141` |
+| `trap_real_short_subnormal` | `SHORTREAL * SHORTREAL` subnormal result → `TRAP 141` |
+| `trap_real_short_add_overflow` | `MAX(SHORTREAL) + MAX(SHORTREAL)` → `TRAP 142` |
+| `trap_real_short_sub_overflow` | `MAX(SHORTREAL) - (-MAX(SHORTREAL))` → `TRAP 142` |
+| `trap_real_nocheck` | `-nocheck` keeps unchecked real arithmetic |
 
 `javap` on `trap_halt` shows `CP/CPJrts/CPJrts.Halt/HaltTrap` and no
 `java/lang/System.exit`; `trap_assert_*` show `new CP/CPJrts/TrapError`.
-REAL traps 140–143 remain unimplemented (per the plan).
+`trap_real_*` show `CP/CPJrts/CPJrts.AddD/SubD/MulD/DivD` (and `F`
+variants); `-nocheck` keeps `dadd`/`dmul`/`ddiv`.
 
 ## Not covered
 

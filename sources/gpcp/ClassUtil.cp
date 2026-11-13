@@ -248,8 +248,8 @@ MODULE ClassUtil;
 
   VAR
         typeArr   : ARRAY 16 OF INTEGER;
-        procNames : ARRAY 40 OF L.CharOpen;
-        procSigs  : ARRAY 40 OF L.CharOpen;
+        procNames : ARRAY 48 OF L.CharOpen;
+        procSigs  : ARRAY 48 OF L.CharOpen;
 
         object-       : L.CharOpen;
         init-         : L.CharOpen;
@@ -2396,6 +2396,14 @@ BEGIN
   procNames[J.Halt] := L.strToCharOpen("Halt");
   procNames[J.HaltTrap] := L.strToCharOpen("HaltTrap");
   procNames[J.TrapMsg] := L.strToCharOpen("TrapMsg");
+  procNames[J.AddD] := L.strToCharOpen("AddD");
+  procNames[J.SubD] := L.strToCharOpen("SubD");
+  procNames[J.MulD] := L.strToCharOpen("MulD");
+  procNames[J.DivD] := L.strToCharOpen("DivD");
+  procNames[J.AddF] := L.strToCharOpen("AddF");
+  procNames[J.SubF] := L.strToCharOpen("SubF");
+  procNames[J.MulF] := L.strToCharOpen("MulF");
+  procNames[J.DivF] := L.strToCharOpen("DivF");
   procNames[J.AddI] := L.strToCharOpen("AddI");
   procNames[J.SubI] := L.strToCharOpen("SubI");
   procNames[J.MulI] := L.strToCharOpen("MulI");
@@ -2435,6 +2443,14 @@ BEGIN
   procSigs[J.Halt] := L.strToCharOpen("(I)V");
   procSigs[J.HaltTrap] := L.strToCharOpen("(I[Ljava/lang/String;[Ljava/lang/Object;)V");
   procSigs[J.TrapMsg] := L.strToCharOpen("(Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/Object;)LCP/CPJrts/TrapError;");
+  procSigs[J.AddD] := L.strToCharOpen("(DD)D");
+  procSigs[J.SubD] := procSigs[J.AddD];
+  procSigs[J.MulD] := procSigs[J.AddD];
+  procSigs[J.DivD] := procSigs[J.AddD];
+  procSigs[J.AddF] := L.strToCharOpen("(FF)F");
+  procSigs[J.SubF] := procSigs[J.AddF];
+  procSigs[J.MulF] := procSigs[J.AddF];
+  procSigs[J.DivF] := procSigs[J.AddF];
   procSigs[J.AddI] := IIretI;
   procSigs[J.SubI] := IIretI;
   procSigs[J.MulI] := IIretI;
