@@ -55,8 +55,9 @@ rejected**:
 | `spec_module_cyclic_err` | cyclic import |
 | `spec_module_self_err` | module imports itself |
 
-The REAL cases (`spec_real_*`) were also accepted by the reference
-compiler.  Their run-time expectations (INF for overflow/division by zero,
+The REAL cases (`spec_real_*`) and the narrowing-conversion cases
+(`spec_range_*`) were also accepted by the reference compiler; the
+reference emits its own `ranTrap` (134) for the same `Check` paths.  Their run-time expectations (INF for overflow/division by zero,
 0 or subnormal for underflow, trap 143 only for NaN) follow report 8.2.2
 and the reference's FPU control word (`Kernel.InitFpu` masks overflow,
 underflow and zero-divide and traps only invalid operations).

@@ -626,6 +626,11 @@ distinguish from an ordinary command error.
   behaviour;
 - division/modulo (`DIV`, `MOD`) trap `139` for a zero divisor and for
   `MIN / -1` (the JVM itself returns `MIN` for the latter);
+- narrowing conversions (`SHORT`, `CHR`, `CHAR`/`SHORTCHAR`/`BYTE`/
+  `SHORTINT`) check the target range and trap `134` when checking is
+  enabled (`CPJrts.RangeCheckI`).  `LONGINT -> INTEGER` stays a plain
+  truncation, as specified for `SHORT`.  `-nocheck` keeps the unchecked
+  `i2s`/`i2b`/`i2c`/mask code;
 - checked `REAL`/`SHORTREAL` arithmetic: `+`, `-`, `*` and `/` go through
   `CPJrts.AddD/SubD/MulD/DivD` (and the `F` variants) when checking is
   enabled.  Following the language report (8.2.2) and BlackBox's FPU
@@ -655,14 +660,15 @@ distinguish from an ordinary command error.
 without a code, `CASE`, `WITH`, the `-legacy` emitter, local-variable
 snapshots for `HALT` and `ASSERT` (`trap_snapshot`, `trap_assert_snapshot`),
 `INTEGER`/`LONGINT` overflow, `INC` overflow, `DIV`/`MOD` by zero and
-`MIN / -1`, `FOR` counter overflow (up/down, INTEGER/LONGINT), and
+`MIN / -1`, `FOR` counter overflow (up/down, INTEGER/LONGINT), narrowing
+conversions (trap 134, including the `-legacy` and `-nocheck` paths), and
 `-nocheck`.  The `spec_*` cases cover the language report chapter by
 chapter; in particular `spec_real_*` pins the report's `INF`/`0`/NaN
 semantics.
 
 The runner understands `expect-trap.txt` (one or more expected stderr
 substrings; the module must exit non-zero), `compile-error.txt` (expected
-compiler diagnostic) and `flags.txt` (extra compiler flags); 190/190 cases
+compiler diagnostic) and `flags.txt` (extra compiler flags); 197/197 cases
 pass.  The same spec sources were compiled with the original BlackBox 1.7.2
 compiler as a differential check: every valid case was accepted and every
 expected-error case was rejected.  `javap` confirms

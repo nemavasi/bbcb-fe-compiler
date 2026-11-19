@@ -1585,6 +1585,7 @@ BEGIN
   rtsProcs[J.SubF] := "CP/CPJrts/CPJrts/SubF(FF)F";
   rtsProcs[J.MulF] := "CP/CPJrts/CPJrts/MulF(FF)F";
   rtsProcs[J.DivF] := "CP/CPJrts/CPJrts/DivF(FF)F";
+  rtsProcs[J.ChkI] := "CP/CPJrts/CPJrts/RangeCheckI(III)I";
   rtsProcs[J.AddI] := "CP/CPJrts/CPJrts/AddI(II)I";
   rtsProcs[J.SubI] := "CP/CPJrts/CPJrts/SubI(II)I";
   rtsProcs[J.MulI] := "CP/CPJrts/CPJrts/MulI(II)I";
