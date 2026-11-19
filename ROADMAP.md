@@ -4,7 +4,7 @@
 
 - `main` = `2c71820` (влит `trap134`), `tests/gpcp` — **198/198**;
 - текущая работа: `strcmpFix` (фикс `>` на строковых константах);
-- `bbcb-fe/ci/pinned.txt` обновляется на `a17745b`;
+- `bbcb-fe/ci/pinned.txt` обновляется на HEAD ветки `strcmpFix`;
 - REAL-семантика приведена к отчёту 8.2.2 и `Kernel.InitFpu`
   (overflow → `INF`, underflow → `0`/subnormal, `1.0/0.0` → `INF`,
   трап только `143` для NaN).
