@@ -149,63 +149,38 @@ public class CPJrts
 	{ try { return Math.negateExact(a); } catch (ArithmeticException e) { throw Ovf(); } }
 
 /* ==================================================================== *
- *		Checked REAL/SHORTREAL arithmetic (traps 140-143)	*
+ *		Checked REAL/SHORTREAL arithmetic (trap 143 only)	*
  * ==================================================================== */
 
-	private static final int OP_ADD = 0;
-	private static final int OP_SUB = 1;
-	private static final int OP_MUL = 2;
-	private static final int OP_DIV = 3;
+	/* The Component Pascal report defines real overflow as INF (with the
+	   sign of the exact result), underflow as 0 or a subnormal, and
+	   1.0/0.0 as INF.  BlackBox's FPU control word masks overflow,
+	   underflow and zero-divide and traps only invalid operations, so the
+	   only checked real trap is 143 (NaN / undefined result). */
 
-	private static double CheckD(double r, double a, double b, int op)
+	private static double CheckD(double r)
 	{
 	    if (Double.isNaN(r))
 	        throw new TrapError(TrapError.REAL_UNDEFINED);
-	    if (Double.isInfinite(r)) {
-	        if (op == OP_DIV && b == 0.0)
-	            throw new TrapError(TrapError.REAL_INF);
-	        throw new TrapError(TrapError.REAL_OVERFLOW);
-	    }
-	    if (r != 0.0 && Math.abs(r) < Double.MIN_NORMAL)
-	        throw new TrapError(TrapError.REAL_UNDERFLOW);
-	    if (r == 0.0) {
-	        if (op == OP_MUL && a != 0.0 && b != 0.0)
-	            throw new TrapError(TrapError.REAL_UNDERFLOW);
-	        if (op == OP_DIV && a != 0.0)
-	            throw new TrapError(TrapError.REAL_UNDERFLOW);
-	    }
 	    return r;
 	}
 
-	private static float CheckF(float r, float a, float b, int op)
+	private static float CheckF(float r)
 	{
 	    if (Float.isNaN(r))
 	        throw new TrapError(TrapError.REAL_UNDEFINED);
-	    if (Float.isInfinite(r)) {
-	        if (op == OP_DIV && b == 0.0f)
-	            throw new TrapError(TrapError.REAL_INF);
-	        throw new TrapError(TrapError.REAL_OVERFLOW);
-	    }
-	    if (r != 0.0f && Math.abs(r) < Float.MIN_NORMAL)
-	        throw new TrapError(TrapError.REAL_UNDERFLOW);
-	    if (r == 0.0f) {
-	        if (op == OP_MUL && a != 0.0f && b != 0.0f)
-	            throw new TrapError(TrapError.REAL_UNDERFLOW);
-	        if (op == OP_DIV && a != 0.0f)
-	            throw new TrapError(TrapError.REAL_UNDERFLOW);
-	    }
 	    return r;
 	}
 
-	public static double AddD(double a, double b) { return CheckD(a + b, a, b, OP_ADD); }
-	public static double SubD(double a, double b) { return CheckD(a - b, a, b, OP_SUB); }
-	public static double MulD(double a, double b) { return CheckD(a * b, a, b, OP_MUL); }
-	public static double DivD(double a, double b) { return CheckD(a / b, a, b, OP_DIV); }
+	public static double AddD(double a, double b) { return CheckD(a + b); }
+	public static double SubD(double a, double b) { return CheckD(a - b); }
+	public static double MulD(double a, double b) { return CheckD(a * b); }
+	public static double DivD(double a, double b) { return CheckD(a / b); }
 
-	public static float AddF(float a, float b) { return CheckF(a + b, a, b, OP_ADD); }
-	public static float SubF(float a, float b) { return CheckF(a - b, a, b, OP_SUB); }
-	public static float MulF(float a, float b) { return CheckF(a * b, a, b, OP_MUL); }
-	public static float DivF(float a, float b) { return CheckF(a / b, a, b, OP_DIV); }
+	public static float AddF(float a, float b) { return CheckF(a + b); }
+	public static float SubF(float a, float b) { return CheckF(a - b); }
+	public static float MulF(float a, float b) { return CheckF(a * b); }
+	public static float DivF(float a, float b) { return CheckF(a / b); }
 
 /* -------------------------------------------------------------------- */
 
@@ -283,6 +258,8 @@ public class CPJrts
 	public static void JavaStrToFixChr(char[] out, String in)
 	{
 	    int    len = in.length();
+	    if (len >= out.length)
+	        throw new TrapError(TrapError.STRING_TOO_LONG);
 	    in.getChars(0, len, out, 0);
 	    out[len] = '\0';
 	}
@@ -306,6 +283,8 @@ public class CPJrts
 	    int  ix = 0;
 	    char ch;
 	    do {
+		if (ix >= dst.length)
+		    throw new TrapError(TrapError.STRING_TOO_LONG);
 		ch = src[ix];
 		dst[ix] = ch;
 		ix++;
@@ -320,7 +299,7 @@ public class CPJrts
 	    char ch;
 	    do {
 		ch = src[ix];
-		if (ch > 0xFF) throw new Error("SHORT on array error");
+		if (ch > 0xFF) throw new TrapError(TrapError.RANGE);
 		ix++;
 	    } while (ch != '\0');
 	}

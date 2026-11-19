@@ -628,10 +628,15 @@ distinguish from an ordinary command error.
   `MIN / -1` (the JVM itself returns `MIN` for the latter);
 - checked `REAL`/`SHORTREAL` arithmetic: `+`, `-`, `*` and `/` go through
   `CPJrts.AddD/SubD/MulD/DivD` (and the `F` variants) when checking is
-  enabled.  The helpers map the Java FP result to BlackBox traps:
-  `140` infinite result (including division by zero), `141` underflow,
-  `142` overflow and `143` NaN/invalid operation.  `-nocheck` keeps the
-  original `dadd`/`fadd`/`ddiv`/`fdiv` instructions;
+  enabled.  Following the language report (8.2.2) and BlackBox's FPU
+  control word (`Kernel.InitFpu` masks overflow, underflow and zero-divide
+  and traps only invalid operations), overflow yields `INF` with the sign
+  of the exact result, underflow yields `0` or a subnormal, and
+  `1.0/0.0` yields `INF`; only an undefined result (`0.0/0.0`, NaN)
+  traps `143`.  The constants `140`/`141`/`142` remain defined for
+  platform compatibility but are not raised by the default checked
+  helpers.  `-nocheck` keeps the original `dadd`/`fadd`/`ddiv`/`fdiv`
+  instructions;
 - `FOR`-loop counter increments use `CPJrts.AddI`/`AddL` when checking is
   enabled, for both ascending and descending loops and for `INTEGER`/
   `LONGINT` control variables; `-nocheck` keeps `iadd`/`ladd`;
@@ -645,16 +650,22 @@ distinguish from an ordinary command error.
   `cp sources/libs/java/dest/CP/CPJrts/*.class libs/CP/CPJrts/` before using
   the new runtime.
 
-**Tests.** New `trap_*` cases cover `HALT(7)`, `HALT(128)`, `HALT` in
+**Tests.** The `trap_*` cases cover `HALT(7)`, `HALT(128)`, `HALT` in
 `<clinit>`, `HALT` in a function and in a void procedure, `ASSERT` with and
 without a code, `CASE`, `WITH`, the `-legacy` emitter, local-variable
 snapshots for `HALT` and `ASSERT` (`trap_snapshot`, `trap_assert_snapshot`),
 `INTEGER`/`LONGINT` overflow, `INC` overflow, `DIV`/`MOD` by zero and
-`MIN / -1`, `REAL`/`SHORTREAL` division by zero, zero/subnormal underflow,
-overflow (add/sub/mul) and NaN, `FOR` counter overflow (up/down, INTEGER/
-LONGINT), and `-nocheck`.  The runner understands `expect-trap.txt` (one or
-more expected stderr substrings; the module must exit non-zero) and
-`flags.txt` (extra compiler flags); 129/129 cases pass.  `javap` confirms
+`MIN / -1`, `FOR` counter overflow (up/down, INTEGER/LONGINT), and
+`-nocheck`.  The `spec_*` cases cover the language report chapter by
+chapter; in particular `spec_real_*` pins the report's `INF`/`0`/NaN
+semantics.
+
+The runner understands `expect-trap.txt` (one or more expected stderr
+substrings; the module must exit non-zero), `compile-error.txt` (expected
+compiler diagnostic) and `flags.txt` (extra compiler flags); 190/190 cases
+pass.  The same spec sources were compiled with the original BlackBox 1.7.2
+compiler as a differential check: every valid case was accepted and every
+expected-error case was rejected.  `javap` confirms
 `CP/CPJrts/CPJrts.Halt/HaltTrap`, `CP/CPJrts/TrapError`, the `AddD/DivD/...`
 helpers, and no `java/lang/System.exit`.
 

@@ -1,6 +1,0 @@
-MODULE TRSSubO;
-  IMPORT CPmain;
-  VAR a, b, c: SHORTREAL;
-BEGIN
-  a := MAX(SHORTREAL); b := -MAX(SHORTREAL); c := a - b
-END TRSSubO.
