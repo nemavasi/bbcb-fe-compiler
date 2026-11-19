@@ -577,7 +577,7 @@ predeclared procedures), and the valid strict edge cases `proceq_anon_array`,
 `proceq_multidim_array`, `proceq_anon_field`, `proceq_anon_param`,
 `var_proc_param_anon`, plus `proceq_array_length` (distinct fixed/open array
 signatures) and `proceq_identity` (Java probe for `equals`, `hashCode`, the
-absence of `procEnv` and distinct host classes); 209/209 cases pass.
+absence of `procEnv` and distinct host classes); 216/216 cases pass.
 
 ---
 
@@ -657,7 +657,17 @@ distinguish from an ordinary command error.
   instructions;
 - `FOR`-loop counter increments use `CPJrts.AddI`/`AddL` when checking is
   enabled, for both ascending and descending loops and for `INTEGER`/
-  `LONGINT` control variables; `-nocheck` keeps `iadd`/`ladd`;
+  `LONGINT` control variables; `-nocheck` keeps `iadd`/`ladd`.  This is a
+  GPCP default-check extension: the reference lowers `FOR` to `INC`, whose
+  `INTO` is emitted only with the `+` (`allchecks`) option, so BlackBox's
+  default wraps and `+` traps 138.  The non-simple (variable-bound) branch
+  and `BY` other than ±1 are covered by `trap_for_overflow_var_*` and
+  `trap_for_overflow_by3`/`_down_by3`; `trap_for_nocheck_var` pins the
+  wrapping path;
+- `AsmUtil.newLongLocal` now returns the first slot of the two-slot
+  temporary (`ord + 1`), not the second slot.  This fixes the stack-map
+  failure for LONGINT `FOR` loops with non-constant bounds and for
+  `ROT`/`LSH` on LONGINT;
 - string relational constant folding uses `L.strCmp` correctly
   (`-1/0/1`); `>` was folded as `sRes > 1` and was always `FALSE` for
   constants.  `CPJrts.strCmp` now returns `1` when the left array is

@@ -1029,7 +1029,7 @@ MODULE AsmUtil;
     emtr.mthFrame.AddLocal( t );
     new := emtr.mthFrame.LcHi();
     ASSERT( new = ord + 2 );
-    RETURN new;
+    RETURN ord + 1;
   END newLongLocal;
 
  (* --------------------------------------------------------- *)

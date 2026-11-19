@@ -56,7 +56,7 @@ reused where they already exercise the rule.
 | 9.5 | CASE labels, ranges, ELSE, no match | `spec_stmt_case`, `trap_case`, `oberonc_CaseNum0`, `oberonc_CaseNum1` |
 | 9.6 | WHILE | `spec_stmt_while_repeat` |
 | 9.7 | REPEAT executes at least once | `spec_stmt_while_repeat` |
-| 9.8 | FOR, TO, BY, descending, zero iterations | `spec_stmt_for`, `trap_for_*`, `oberonc_TestFor`, `oberonc_TestFor1` |
+| 9.8 | FOR, TO, BY, descending, zero iterations | `spec_stmt_for`, `spec_stmt_for_var`, `trap_for_*`, `oberonc_TestFor`, `oberonc_TestFor1` |
 | 9.9 | LOOP/EXIT | `spec_stmt_loop_exit` |
 | 9.10 | RETURN in functions and procedures | `spec_proc_nested_recursion`, `adr047_func_end`, `oberonc_TestReturn0` |
 | 9.11 | WITH guards and ELSE | `spec_stmt_with_else`, `trap_with` |
