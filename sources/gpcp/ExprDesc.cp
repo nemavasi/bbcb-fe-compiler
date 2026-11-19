@@ -1789,7 +1789,7 @@ MODULE ExprDesc;
         IF fold THEN
           sRes := L.strCmp(i.lKid(LeafX).value, i.rKid(LeafX).value);
           CASE i.kind OF
-          | greT   : bRes := sRes > 1;
+          | greT   : bRes := sRes > 0;
           | greEq  : bRes := sRes >= 0;
           | notEq  : bRes := sRes # 0;
           | lessEq : bRes := sRes <= 0;

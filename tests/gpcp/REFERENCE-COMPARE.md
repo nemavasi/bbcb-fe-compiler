@@ -33,7 +33,7 @@ Valid modules (expected: accepted by both compilers) — all **26/26 OK**:
 |---|---|
 | lexical | `spec_lex_number`, `spec_lex_string`, `spec_scope_shadow`, `spec_scope_forward_type` |
 | constants/types | `spec_const_expr`, `spec_type_array_multi`, `spec_type_record_ext`, `spec_type_guard`, `spec_type_proc_type`, `spec_type_anyptr_anyrec`, `spec_type_domains`, `spec_type_string_short` |
-| expressions | `spec_expr_precedence`, `spec_expr_div_mod`, `spec_expr_sets`, `spec_expr_strings` |
+| expressions | `spec_expr_precedence`, `spec_expr_div_mod`, `spec_expr_sets`, `spec_expr_strings`, `spec_str_rel` |
 | statements | `spec_stmt_case`, `spec_stmt_for`, `spec_stmt_with_else` |
 | procedures | `spec_proc_nested_recursion`, `spec_proc_forward`, `spec_proc_method_dispatch`, `spec_proc_method_super` |
 | predeclared | `spec_pred_ash`, `spec_pred_bits`, `spec_pred_entier`, `spec_pred_len_size` |

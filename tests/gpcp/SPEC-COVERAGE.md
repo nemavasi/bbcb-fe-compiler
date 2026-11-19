@@ -45,7 +45,7 @@ reused where they already exercise the rule.
 | 8.2.2 | real INF/underflow/NaN semantics | `spec_real_div_zero`, `spec_real_overflow`, `spec_real_underflow`, `spec_real_nan` |
 | 8.2.3 | set operators and constructors | `spec_expr_sets`, `spec_pred_bits`, `adr020_021_sets` |
 | 8.2.4 | string concatenation | `spec_expr_strings`, `spec_stmt_assign_string` |
-| 8.2.5 | relations (numeric, char, string, bool, set, pointer, proc, NIL) | `spec_expr_relations`, `spec_type_proc_type` |
+| 8.2.5 | relations (numeric, char, string, bool, set, pointer, proc, NIL) | `spec_expr_relations`, `spec_str_rel`, `spec_type_proc_type` |
 | 8.2.5 | `IN` and `IS` | `spec_expr_sets`, `spec_type_guard` |
 | 9.1 | assignment compatibility | `spec_stmt_assign_compat` (error), `spec_type_array_assign`, `oberonc_RecordAssignment2` |
 | 9.1/A | narrowing conversions (`SHORT`/`CHR`) range check 134 | `spec_range_shortint`, `spec_range_shortint_ok`, `spec_range_byte`, `spec_range_char`, `spec_range_shortchar`, `spec_range_nocheck`, `spec_range_legacy` |

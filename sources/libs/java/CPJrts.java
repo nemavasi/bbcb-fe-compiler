@@ -321,7 +321,7 @@ public class CPJrts
 		else if (l[ix] == '\0') return 0;
 	    }
 	    if (l.length < r.length) return -1;
-	    else if (l.length < r.length) return 1;
+	    else if (l.length > r.length) return 1;
 	    else return 0;
 	}
 
