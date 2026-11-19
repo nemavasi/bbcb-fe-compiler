@@ -68,7 +68,7 @@ reused where they already exercise the rule.
 | 10.2 | NEW/EXTENSIBLE, super calls | `spec_proc_method_super` |
 | 10.2 | ABSTRACT/EMPTY methods, covariance | `spec_proc_method_abstract`, `adr072_covariant` |
 | 10.3 | ABS, ASH, BITS, CAP, CHR, ORD | `spec_pred_abs`, `spec_pred_ash`, `spec_pred_bits`, `spec_pred_cap_ord_chr` |
-| 10.3 | ENTIER, LEN, SIZE | `spec_pred_entier`, `spec_pred_len_size` (SIZE is not supported by GPCP; see below) |
+| 10.3 | ENTIER, LEN, SIZE | `spec_pred_entier`, `spec_pred_len_size` (SIZE is not supported by GPCP; see below), `spec_pred_size_err` |
 | 10.3 | LONG/SHORT, MAX/MIN, ODD | `spec_pred_long_short`, `spec_type_domains`, `spec_pred_odd` |
 | 10.3 | INC/DEC/INCL/EXCL, NEW, ASSERT, HALT | `spec_pred_inc_dec_incl_excl`, `spec_pred_new_clear`, `trap_*` |
 | 10.4 | FINALIZE | `adr025_finalize` |
@@ -87,9 +87,10 @@ reused where they already exercise the rule.
 ## Known deviations
 
 * `SIZE(T)` is rejected by GPCP ("SIZE is not meaningful in this
-  implementation"), so the `spec_pred_len_size` case covers `LEN` only.
-  The language report permits `SIZE` but leaves its value
-  implementation-defined; the reference BlackBox accepts it.
+  implementation"), so the `spec_pred_len_size` case covers `LEN` only
+  and `spec_pred_size_err` pins the diagnostic.  The language report
+  permits `SIZE` but leaves its value implementation-defined; the
+  reference BlackBox accepts it.
 * `LONG`/`SHORT` on string values are not accepted by GPCP; the
   `spec_pred_long_short` case covers the numeric forms.  The reference
   BlackBox accepts the string forms.
