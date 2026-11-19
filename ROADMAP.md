@@ -2,7 +2,7 @@
 
 Состояние на момент записи:
 
-- `main` = `7dc4513` (влит `strcmpFix`), `tests/gpcp` — **204/204**;
+- `main` = `43dd25a` (влит `proctype`), `tests/gpcp` — **209/209**;
 - текущая работа: `strcmpFix` (фикс `>` на строковых константах);
 - `bbcb-fe/ci/pinned.txt` обновляется на HEAD ветки `strcmpFix`;
 - REAL-семантика приведена к отчёту 8.2.2 и `Kernel.InitFpu`
@@ -56,9 +56,13 @@
   BlackBox, задать фиксированную CP-раскладку (x86-подобную), а не
   реальный размер JVM-объекта.
 
-- [ ] **`LONG`/`SHORT` на строках.**
-  GPCP не принимает `LONG("ab")` / `SHORT("ab")`; эталон принимает.
-  Числовые формы работают.
+- [x] **`LONG`/`SHORT` на строках.**
+  Вариант A: `LONG`/`SHORT` получили строковые ветки; `SHORT` wide-string
+  проверяется через `ChrArrCheck` (trap 134), литералы копируются через
+  `StrToChrs`.  Тесты `spec_pred_long_short_str`,
+  `spec_pred_short_str_wide`, `spec_pred_short_str_wide_var`.
+  Литералы по-прежнему типизируются как `String` (6.6 — возможный
+  follow-up, вариант B).
 
 - [ ] **FOR-overflow.**
   Это расширение GPCP. Не проверено на эталоне, трапает ли BlackBox при
