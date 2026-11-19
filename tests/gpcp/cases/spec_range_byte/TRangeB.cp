@@ -19,5 +19,6 @@ MODULE TRangeB;
   IMPORT CPmain;
   VAR i: INTEGER; b: BYTE;
 BEGIN
-  i := 200; b := SHORT(SHORT(i))
+  i := 200; b := SHORT(SHORT(i));
+  ASSERT(b = -56)
 END TRangeB.

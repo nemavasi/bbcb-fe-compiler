@@ -19,5 +19,6 @@ MODULE TRangeS;
   IMPORT CPmain;
   VAR i: INTEGER; s: SHORTINT;
 BEGIN
-  i := 40000; s := SHORT(i)
+  i := 40000; s := SHORT(i);
+  ASSERT(s = -25536)
 END TRangeS.

@@ -2,7 +2,7 @@
 
 Состояние на момент записи:
 
-- `main` = `2c71820` (влит `trap134`), `tests/gpcp` — **198/198**;
+- `main` = `7dc4513` (влит `strcmpFix`), `tests/gpcp` — **204/204**;
 - текущая работа: `strcmpFix` (фикс `>` на строковых константах);
 - `bbcb-fe/ci/pinned.txt` обновляется на HEAD ветки `strcmpFix`;
 - REAL-семантика приведена к отчёту 8.2.2 и `Kernel.InitFpu`
@@ -73,13 +73,16 @@
 
 - [ ] Reference comparison — только accept/reject; runtime эталона не
   сравнивался, harness (Wine + BlackBox + XTest) вне репозитория.
-- [ ] `-jasmin` — нет end-to-end trap-теста (нужен Jasmin).
-- [ ] `-legacy` — покрыты `HALT`/`ASSERT`, но не `CASE`/`WITH`.
-- [ ] Снапшоты: OUT-скаляры не попадают; VAR-скаляры показывают значение
-  на входе; `CASE`/`WITH` снапшот не передают; тело модуля/legacy/jasmin —
-  `null`; тесты проверяют только имена, не значения/боксинг.
-- [ ] Нет тестов на 134, 131, 137, `FatalError`, `SIZE`, range-check,
-  non-simple FOR/BY.
+- [x] `-jasmin` — добавлены compile-only тесты `trap_case_jasmin` и
+  `trap_with_jasmin` (полный Jasmin-runtime не проверяется).
+- [x] `-legacy` — добавлены `trap_case_legacy` и `trap_with_legacy`.
+- [ ] Снапшоты: `smoke_trap` теперь проверяет значения и боксинг скалярных
+  типов (`TrapValues`); OUT-скаляры, `CASE`/`WITH`, module body и
+  legacy/jasmin по-прежнему не имеют полного снапшота.
+- [x] Тесты на 134 (`spec_range_*`; `SHORT` — усечение, `CHR` — 134),
+  137 (`smoke_trap`, `stack`), `SIZE` (`spec_pred_size_err`).
+- [ ] Нет тестов на 131 и `FatalError`.
+- [x] non-simple FOR и `BY ±2` — `spec_stmt_for_var`.
 
 ## P3 — платформа и воспроизводимость
 

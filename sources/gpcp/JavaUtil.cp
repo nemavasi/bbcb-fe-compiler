@@ -2250,17 +2250,15 @@ CSt.Message( "made mNm name " + mNm^ );
 	ELSE  RETURN;				(* PREMATURE RETURN! *)
         END;
     | Ty.sIntN :
+        (* SHORT is a truncating projection (report 10.3), not a check. *)
         jf.ConvertDn(inT, Blt.intTp, FALSE);
-        IF check THEN CheckRange(-32768, 32767) END;
         code := Jvm.opc_i2s;
     | Ty.uBytN :
         jf.ConvertDn(inT, Blt.intTp, FALSE);
-        IF check THEN CheckRange(0, 255) END;
         jf.PushInt(255);
         code := Jvm.opc_iand;
     | Ty.byteN :
 	jf.ConvertDn(inT, Blt.intTp, FALSE);
-	IF check THEN CheckRange(-128, 127) END;
 	code := Jvm.opc_i2b;
     | Ty.setN  : 
 	jf.ConvertDn(inT, Blt.intTp, FALSE); RETURN;	(* PREMATURE RETURN! *)
@@ -2269,8 +2267,8 @@ CSt.Message( "made mNm name " + mNm^ );
         IF check THEN CheckRange(0, 65535) END;
         code := Jvm.opc_i2c;
     | Ty.sChrN  : 
+        (* CHAR -> SHORTCHAR is also a projection. *)
         jf.ConvertDn(inT, Blt.intTp, FALSE);
-        IF check THEN CheckRange(0, 255) END;
         jf.PushInt(255);
         code := Jvm.opc_iand;
     END;
