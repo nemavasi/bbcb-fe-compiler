@@ -3047,7 +3047,8 @@ MODULE JavaMaker;
     | lhTyp : Ty.Array DO 
         IF stat.rhsX.kind = Xp.mkStr THEN
           e.outF.CallRTS(Ju.StrVal, 2, 0);
-        ELSIF stat.rhsX.type = Bi.strTp THEN
+        ELSIF (stat.rhsX.kind = Xp.strLt) OR (stat.rhsX.type = Bi.strTp) THEN
+          (* a literal is pushed as java.lang.String, whatever its CP type *)
           e.outF.CallRTS(Ju.StrToChrs,2, 0);
         ELSE
           e.outF.ValArrCopy(lhTyp);

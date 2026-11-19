@@ -1364,6 +1364,8 @@ MODULE ExprDesc;
               IF ~L.isShortStr(rslt(LeafX).value) THEN
                 rslt.ExprError(168) END;
               rslt.type := Builtin.sStrTp;
+            ELSIF rslt.type = Builtin.sStrTp THEN (* already Shortstring *)
+              (* identity *)
             ELSIF rslt.type = Builtin.strTp  THEN (* do at runtime *)
               rslt := newUnaryX(strChk, rslt);
               rslt.type := Builtin.sStrTp;
@@ -1388,14 +1390,21 @@ MODULE ExprDesc;
           ELSIF act.tide > 1 THEN prc.ExprError(23);
           ELSE
             rslt := arg0;
-            IF    rslt.type = Builtin.intTp  THEN dstT := Builtin.lIntTp;
-            ELSIF rslt.type = Builtin.sIntTp THEN dstT := Builtin.intTp;
-            ELSIF rslt.type = Builtin.byteTp THEN dstT := Builtin.sIntTp;
-            ELSIF rslt.type = Builtin.sReaTp THEN dstT := Builtin.realTp;
-            ELSIF rslt.type = Builtin.sChrTp THEN dstT := Builtin.charTp;
-            ELSE  rslt.ExprError(47);     dstT := Builtin.lIntTp;
+            IF rslt.type = Builtin.sStrTp THEN
+              (* Shortstring -> String: type only, both are char[] *)
+              rslt.type := Builtin.strTp
+            ELSIF rslt.type = Builtin.strTp THEN
+              (* String -> String: identity *)
+            ELSE
+              IF    rslt.type = Builtin.intTp  THEN dstT := Builtin.lIntTp;
+              ELSIF rslt.type = Builtin.sIntTp THEN dstT := Builtin.intTp;
+              ELSIF rslt.type = Builtin.byteTp THEN dstT := Builtin.sIntTp;
+              ELSIF rslt.type = Builtin.sReaTp THEN dstT := Builtin.realTp;
+              ELSIF rslt.type = Builtin.sChrTp THEN dstT := Builtin.charTp;
+              ELSE  rslt.ExprError(47);     dstT := Builtin.lIntTp;
+              END;
+              rslt := convert(rslt, dstT)
             END;
-            rslt := convert(rslt, dstT);
           END;
       (* ---------------------------- *)
       | Builtin.sizeP :

@@ -69,7 +69,7 @@ reused where they already exercise the rule.
 | 10.2 | ABSTRACT/EMPTY methods, covariance | `spec_proc_method_abstract`, `adr072_covariant` |
 | 10.3 | ABS, ASH, BITS, CAP, CHR, ORD | `spec_pred_abs`, `spec_pred_ash`, `spec_pred_bits`, `spec_pred_cap_ord_chr` |
 | 10.3 | ENTIER, LEN, SIZE | `spec_pred_entier`, `spec_pred_len_size` (SIZE is not supported by GPCP; see below), `spec_pred_size_err` |
-| 10.3 | LONG/SHORT, MAX/MIN, ODD | `spec_pred_long_short`, `spec_type_domains`, `spec_pred_odd` |
+| 10.3 | LONG/SHORT, MAX/MIN, ODD | `spec_pred_long_short`, `spec_pred_long_short_str`, `spec_pred_short_str_wide`, `spec_pred_short_str_wide_var`, `spec_type_domains`, `spec_pred_odd` |
 | 10.3 | INC/DEC/INCL/EXCL, NEW, ASSERT, HALT | `spec_pred_inc_dec_incl_excl`, `spec_pred_new_clear`, `trap_*` |
 | 10.4 | FINALIZE | `adr025_finalize` |
 | 11 | module body, initialization order, CLOSE | `spec_module_body_order` |

@@ -577,7 +577,7 @@ predeclared procedures), and the valid strict edge cases `proceq_anon_array`,
 `proceq_multidim_array`, `proceq_anon_field`, `proceq_anon_param`,
 `var_proc_param_anon`, plus `proceq_array_length` (distinct fixed/open array
 signatures) and `proceq_identity` (Java probe for `equals`, `hashCode`, the
-absence of `procEnv` and distinct host classes); 206/206 cases pass.
+absence of `procEnv` and distinct host classes); 209/209 cases pass.
 
 ---
 
@@ -632,6 +632,12 @@ distinguish from an ordinary command error.
   behaviour;
 - division/modulo (`DIV`, `MOD`) trap `139` for a zero divisor and for
   `MIN / -1` (the JVM itself returns `MIN` for the latter);
+- `LONG`/`SHORT` accept string operands: `LONG` maps `Shortstring` to
+  `String` (type-only; both are `char[]`), `SHORT` maps `String` to
+  `Shortstring` and checks Latin-1 (`ChrArrCheck`, trap 134), while
+  `SHORT` of an already-`Shortstring` value is the identity.  A string
+  literal assigned to a character array is copied through `StrToChrs`
+  regardless of whether its CP type is `String` or `Shortstring`;
 - `CHR(x)` checks that the ordinal fits `CHAR` (0..65535) and traps
   `134` (`CPJrts.RangeCheckI`) when checking is enabled.  `SHORT` is a
   truncating projection per report 10.3 (`LONGINT -> INTEGER`,

@@ -316,7 +316,7 @@ and the runner treats a failed assertion as a failed case.
 | expressions | `spec_expr_precedence`, `spec_expr_shortcircuit`, `spec_expr_div_mod`, `spec_expr_sets`, `spec_expr_strings`, `spec_str_rel`, `spec_expr_relations`, `spec_expr_designator` |
 | statements | `spec_stmt_if`, `spec_stmt_case`, `spec_stmt_while_repeat`, `spec_stmt_for`, `spec_stmt_loop_exit`, `spec_stmt_with_else`, `spec_stmt_empty`, `spec_stmt_assign_*` |
 | procedures | `spec_proc_nested_recursion`, `spec_proc_forward`, `spec_proc_params`, `spec_proc_method_*` |
-| predeclared | `spec_pred_abs`, `spec_pred_ash`, `spec_pred_bits`, `spec_pred_cap_ord_chr`, `spec_pred_entier`, `spec_pred_len_size`, `spec_pred_long_short`, `spec_pred_new_clear`, `spec_pred_inc_dec_incl_excl`, `spec_pred_odd` |
+| predeclared | `spec_pred_abs`, `spec_pred_ash`, `spec_pred_bits`, `spec_pred_cap_ord_chr`, `spec_pred_entier`, `spec_pred_len_size`, `spec_pred_long_short`, `spec_pred_long_short_str`, `spec_pred_short_str_wide`, `spec_pred_short_str_wide_var`, `spec_pred_new_clear`, `spec_pred_inc_dec_incl_excl`, `spec_pred_odd` |
 | modules | `spec_module_alias`, `spec_module_export_*`, `spec_module_body_order`, `spec_module_*_err` |
 | REAL semantics | `spec_real_*` |
 
