@@ -159,6 +159,31 @@ run_case() {
     return 1
   fi
 
+  if [ -f "$work/run-java.txt" ]; then
+    main=$(head -n1 "$work/run-java.txt" | tr -d '[:space:]')
+    actual="$work/actual.txt"
+    if ! "$JAVAC" -encoding UTF-8 -cp "$work:$RTS_DIR:$ROOT/libs" \
+           -d "$work" "$work"/*.java >"$work/javac.log" 2>&1; then
+      echo "  java probe compile failed"
+      sed 's/^/    /' "$work/javac.log"
+      return 1
+    fi
+    if ! ( cd "$work" &&
+           "$JAVA" -Dfile.encoding=UTF-8 -cp "$work:$RTS_DIR:$ROOT/libs" \
+             "$main" ) >"$actual" 2>"$work/run.err"; then
+      echo "  java probe failed: $main"
+      sed 's/^/    /' "$work/run.err"
+      return 1
+    fi
+    if [ -f "$work/expected.txt" ]; then
+      if ! diff -u "$work/expected.txt" "$actual"; then
+        echo "  output mismatch"
+        return 1
+      fi
+    fi
+    return 0
+  fi
+
   if [ -f "$work/run.txt" ]; then
     runmod=$(head -n1 "$work/run.txt" | tr -d '[:space:]')
     actual="$work/actual.txt"

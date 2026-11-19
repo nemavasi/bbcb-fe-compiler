@@ -31,7 +31,7 @@ reused where they already exercise the rule.
 | 6.4 | pointers, forward pointer types | `spec_scope_forward_type`, `spec_scope_forward_type` |
 | 6.4 | NEW, clearing, NIL | `spec_pred_new_clear`, `spec_expr_relations` |
 | 6.4 | ANYPTR, FINALIZE | `spec_type_anyptr_anyrec`, `adr025_finalize`, `adr027_anyptr` |
-| 6.5 | procedure types, matching parameter lists | `spec_type_proc_type`, `proceq_named_types`, `proceq_multidim_array` |
+| 6.5 | procedure types, matching parameter lists | `spec_type_proc_type`, `proceq_named_types`, `proceq_multidim_array`, `proceq_array_length`, `proceq_identity` |
 | 6.5 | procedures are not values (methods/locals/predeclared) | `strict_method_*`, `strict_nested_*`, `strict_predeclared_value` |
 | 6.6 | string types, SHORTCHAR/CHAR | `spec_type_string_short`, `adr051_char_string`, `oberonc_Strings2` |
 | 7 | variable declarations, static/dynamic type | `spec_type_record_ext`, `spec_type_guard` |

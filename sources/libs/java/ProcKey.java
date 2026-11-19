@@ -19,8 +19,9 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 /** Runtime identity of a Component Pascal procedure value.
  *
  *  Every compiler-generated Proc$Lit$ wrapper implements this interface.
- *  Equality is based on the procedure key (owner, name and descriptor)
- *  and, on the extension branch, on the captured environment.
+ *  Equality is based on the procedure key (owner, name and descriptor).
+ *  Strict Component Pascal captures no environment, so the interface has
+ *  no procEnv method.
  *
  *  The interface deliberately lives outside the host classes of procedure
  *  types: those classes are part of the stable Java ABI used by
@@ -32,5 +33,4 @@ package CP.CPJrts;
 public interface ProcKey
 {
     String procKey();
-    Object procEnv();
 }
