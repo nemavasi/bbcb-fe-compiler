@@ -103,7 +103,7 @@ MODULE JavaUtil;
        AddL* = 28; SubL* = 29; MulL* = 30; NegL* = 31;
        TrapMsg* = 32;    (* trap with message + local snapshot *)
        AddD* = 33; SubD* = 34; MulD* = 35; DivD* = 36;
-       AddF* = 37; SubF* = 38; MulF* = 39; DivF* = 40;
+       AddF* = 37; SubF* = 38; MulF* = 39; DivF* = 40; ChkI* = 41;
 
 (* ============================================================ *)
 
@@ -322,7 +322,7 @@ MODULE JavaUtil;
   PROCEDURE^ (jf : JavaFile)PushInt*(num : INTEGER),NEW;
   PROCEDURE^ (jf : JavaFile)PutElement*(typ : Sym.Type),NEW;
   PROCEDURE^ (jf : JavaFile)GetElement*(typ : Sym.Type),NEW;
-  PROCEDURE^ (jf : JavaFile)ConvertDn*(inT, outT : Sym.Type),NEW;
+  PROCEDURE^ (jf : JavaFile)ConvertDn*(inT, outT : Sym.Type; check : BOOLEAN),NEW;
 
   PROCEDURE^ cat2*(i,j : L.CharOpen) : L.CharOpen;
   PROCEDURE^ MkVecName*(typ : Ty.Vector);
@@ -666,7 +666,7 @@ MODULE JavaUtil;
       IF rTp = Blt.anyPtr THEN
         jf.CodeT(Jvm.opc_checkcast, eTp);
       ELSE
-        jf.ConvertDn(rTp, eTp);
+        jf.ConvertDn(rTp, eTp, FALSE);
       END;
     END;
   END GetVecElement;
@@ -2219,9 +2219,15 @@ CSt.Message( "made mNm name " + mNm^ );
 
 (* ------------------------------------------------------------ *)
 
-  PROCEDURE (jf : JavaFile)ConvertDn*(inT, outT : Sym.Type),NEW;
-   (* Conversion "down" often needs a runtime check. *)
+  PROCEDURE (jf : JavaFile)ConvertDn*(inT, outT : Sym.Type; check : BOOLEAN),NEW;
+   (* Conversion "down" often needs a runtime check (trap 134). *)
     VAR inB, outB, code : INTEGER;
+
+    PROCEDURE CheckRange(lo, hi : INTEGER);
+    BEGIN
+      jf.PushInt(lo); jf.PushInt(hi); jf.CallRTS(ChkI, 3, 1)
+    END CheckRange;
+
   BEGIN
     inB  := inT(Ty.Base).tpOrd;
     outB := outT(Ty.Base).tpOrd;
@@ -2239,32 +2245,32 @@ CSt.Message( "made mNm name " + mNm^ );
 	IF    inB = Ty.realN THEN code := Jvm.opc_d2i;
 	ELSIF inB = Ty.sReaN THEN code := Jvm.opc_f2i;
 	ELSIF inB = Ty.lIntN THEN 
-	  (* jf.RangeCheck(...); STILL TO DO *)
+	  (* report: SHORT(LONGINT) is truncation, no range check *)
 	  code := Jvm.opc_l2i;
 	ELSE  RETURN;				(* PREMATURE RETURN! *)
         END;
     | Ty.sIntN :
-        jf.ConvertDn(inT, Blt.intTp);
-        (* jf.RangeCheck(...); STILL TO DO *)
+        jf.ConvertDn(inT, Blt.intTp, FALSE);
+        IF check THEN CheckRange(-32768, 32767) END;
         code := Jvm.opc_i2s;
     | Ty.uBytN :
-         jf.ConvertDn(inT, Blt.intTp);
-        (* jf.RangeCheck(...); STILL TO DO *)
+        jf.ConvertDn(inT, Blt.intTp, FALSE);
+        IF check THEN CheckRange(0, 255) END;
         jf.PushInt(255);
         code := Jvm.opc_iand;
     | Ty.byteN :
-	jf.ConvertDn(inT, Blt.intTp);
-	(* jf.RangeCheck(...); STILL TO DO *)
+	jf.ConvertDn(inT, Blt.intTp, FALSE);
+	IF check THEN CheckRange(-128, 127) END;
 	code := Jvm.opc_i2b;
     | Ty.setN  : 
-	jf.ConvertDn(inT, Blt.intTp); RETURN;	(* PREMATURE RETURN! *)
+	jf.ConvertDn(inT, Blt.intTp, FALSE); RETURN;	(* PREMATURE RETURN! *)
     | Ty.charN  : 
-        jf.ConvertDn(inT, Blt.intTp);
-        (* jf.RangeCheck(...); STILL TO DO *)
+        jf.ConvertDn(inT, Blt.intTp, FALSE);
+        IF check THEN CheckRange(0, 65535) END;
         code := Jvm.opc_i2c;
     | Ty.sChrN  : 
-        jf.ConvertDn(inT, Blt.intTp);
-        (* jf.RangeCheck(...); STILL TO DO *)
+        jf.ConvertDn(inT, Blt.intTp, FALSE);
+        IF check THEN CheckRange(0, 255) END;
         jf.PushInt(255);
         code := Jvm.opc_iand;
     END;

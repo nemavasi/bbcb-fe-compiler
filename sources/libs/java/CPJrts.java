@@ -148,6 +148,13 @@ public class CPJrts
 	public static long NegL(long a)
 	{ try { return Math.negateExact(a); } catch (ArithmeticException e) { throw Ovf(); } }
 
+	/* Narrowing conversion (SHORT/CHR) range check: trap 134. */
+	public static int RangeCheckI(int v, int lo, int hi)
+	{
+	    if (v < lo || v > hi) throw new TrapError(TrapError.RANGE);
+	    return v;
+	}
+
 /* ==================================================================== *
  *		Checked REAL/SHORTREAL arithmetic (trap 143 only)	*
  * ==================================================================== */

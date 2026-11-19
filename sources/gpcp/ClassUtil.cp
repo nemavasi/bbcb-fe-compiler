@@ -2404,6 +2404,7 @@ BEGIN
   procNames[J.SubF] := L.strToCharOpen("SubF");
   procNames[J.MulF] := L.strToCharOpen("MulF");
   procNames[J.DivF] := L.strToCharOpen("DivF");
+  procNames[J.ChkI] := L.strToCharOpen("RangeCheckI");
   procNames[J.AddI] := L.strToCharOpen("AddI");
   procNames[J.SubI] := L.strToCharOpen("SubI");
   procNames[J.MulI] := L.strToCharOpen("MulI");
@@ -2451,6 +2452,7 @@ BEGIN
   procSigs[J.SubF] := procSigs[J.AddF];
   procSigs[J.MulF] := procSigs[J.AddF];
   procSigs[J.DivF] := procSigs[J.AddF];
+  procSigs[J.ChkI] := L.strToCharOpen("(III)I");
   procSigs[J.AddI] := IIretI;
   procSigs[J.SubI] := IIretI;
   procSigs[J.MulI] := IIretI;

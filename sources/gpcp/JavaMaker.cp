@@ -1523,10 +1523,10 @@ MODULE JavaMaker;
     out := e.outF;
     IF lOp.type = Bi.sIntTp THEN 
       rtSz := 16;
-      out.ConvertDn(Bi.intTp, Bi.charTp);
+      out.ConvertDn(Bi.intTp, Bi.charTp, FALSE);
     ELSIF (lOp.type = Bi.byteTp) OR (lOp.type = Bi.uBytTp) THEN
       rtSz := 8;
-      out.ConvertDn(Bi.intTp, Bi.uBytTp);
+      out.ConvertDn(Bi.intTp, Bi.uBytTp, FALSE);
     ELSE
       rtSz := 32;
     END;
@@ -1547,7 +1547,7 @@ MODULE JavaMaker;
         out.PushInt(rtSz - indx);
         out.Code(Jvm.opc_iushr);
         out.Code(Jvm.opc_ior);
-        out.ConvertDn(Bi.intTp, lOp.type);
+        out.ConvertDn(Bi.intTp, lOp.type, FALSE);
       END;
     ELSE
       ixSv := out.newLocal( Bi.intTp ); 
@@ -1566,7 +1566,7 @@ MODULE JavaMaker;
       out.Code(Jvm.opc_iushr);        (* TOS: rRz, lRz, ...             *)
       out.Code(Jvm.opc_ior);          (* TOS: ROT(lOp, rOp), ...        *)
       out.PopLocal();
-      out.ConvertDn(Bi.intTp, lOp.type);
+      out.ConvertDn(Bi.intTp, lOp.type, FALSE);
     END;
     out.PopLocal();
   END RotateInt;
@@ -2145,7 +2145,7 @@ MODULE JavaMaker;
         ELSIF exp.kind = Xp.cvrtUp THEN
           out.ConvertUp(exp.kid.type, typ);
         ELSIF exp.kind = Xp.cvrtDn THEN
-          out.ConvertDn(exp.kid.type, typ);
+          out.ConvertDn(exp.kid.type, typ, ovfChecked(out));
         END;
     | exp : Xp.UnaryX DO
         e.PushUnary(exp, typ);

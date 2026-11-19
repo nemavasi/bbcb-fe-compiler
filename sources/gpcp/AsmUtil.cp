@@ -2135,6 +2135,7 @@ BEGIN  (* Module Body *)
   procNames[Ju.SubF] := Lv.strToCharOpen("SubF");
   procNames[Ju.MulF] := Lv.strToCharOpen("MulF");
   procNames[Ju.DivF] := Lv.strToCharOpen("DivF");
+  procNames[Ju.ChkI] := Lv.strToCharOpen("RangeCheckI");
   procNames[Ju.AddI] := Lv.strToCharOpen("AddI");
   procNames[Ju.SubI] := Lv.strToCharOpen("SubI");
   procNames[Ju.MulI] := Lv.strToCharOpen("MulI");
@@ -2182,6 +2183,7 @@ BEGIN  (* Module Body *)
   procSigs[Ju.SubF] := procSigs[Ju.AddF];
   procSigs[Ju.MulF] := procSigs[Ju.AddF];
   procSigs[Ju.DivF] := procSigs[Ju.AddF];
+  procSigs[Ju.ChkI] := Lv.strToCharOpen("(III)I");
   procSigs[Ju.AddI] := IIretI;
   procSigs[Ju.SubI] := IIretI;
   procSigs[Ju.MulI] := IIretI;
@@ -2206,6 +2208,7 @@ BEGIN  (* Module Body *)
   procRetS[Ju.SubF] := procRetS[Ju.AddF];
   procRetS[Ju.MulF] := procRetS[Ju.AddF];
   procRetS[Ju.DivF] := procRetS[Ju.AddF];
+  procRetS[Ju.ChkI] := Lv.strToCharOpen("I");
   procRetS[Ju.AddI] := Lv.strToCharOpen("I");
   procRetS[Ju.SubI] := procRetS[Ju.AddI];
   procRetS[Ju.MulI] := procRetS[Ju.AddI];

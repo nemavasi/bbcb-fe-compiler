@@ -2,7 +2,7 @@
 
 Состояние на момент записи:
 
-- `main` = `6dc5eee` (влит `tests2`), `tests/gpcp` — **190/190**;
+- `main` = `6dc5eee` (влит `tests2`), `tests/gpcp` — **197/197**;
 - `bbcb-fe/ci/pinned.txt` указывает на `6dc5eee`;
 - REAL-семантика приведена к отчёту 8.2.2 и `Kernel.InitFpu`
   (overflow → `INF`, underflow → `0`/subnormal, `1.0/0.0` → `INF`,
@@ -12,14 +12,11 @@
 
 ## P0 — неверное поведение
 
-- [ ] **Trap 134 для сужающих преобразований.**
-  `sources/gpcp/JavaUtil.cp:2242-2267` (`ConvertDn`) содержит
-  `(* jf.RangeCheck(...); STILL TO DO *)`.
-  Не проверяются `INTEGER → SHORTINT/BYTE/CHAR/SHORTCHAR`
-  (и `CHAR → SHORTCHAR`). В эталоне это `ranTrap` → **134**.
-  MSIL-бэкенд уже умеет (`conv.ovf.*`). Нужен runtime-хелпер
-  `CPJrts.RangeCheckI`, RTS-индексы во всех эмиттерах и гейт `-nocheck`.
+- [x] **Trap 134 для сужающих преобразований.**
+  Реализовано в ветке `trap134`: `CPJrts.RangeCheckI`, RTS-индекс
+  `ChkI` во всех эмиттерах, проверки в `ConvertDn` и гейт `-nocheck`.
   `LONGINT → INTEGER` по отчёту — усечение, без проверки.
+  Тесты: `spec_range_*` (197/197).
 
 - [ ] **Платформенные трапы с «сырыми» сообщениями дают `-1`.**
   `blackbox/System/Mod/java/CP/Kernel/Traps.java:172` (`codeOf`) не

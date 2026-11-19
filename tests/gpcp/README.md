@@ -250,6 +250,13 @@ stderr and fails the case).
 | `trap_div` | `MIN(INTEGER) DIV -1` → `TRAP 139` |
 | `trap_div_zero` | `DIV 0` → `TRAP 139` |
 | `trap_mod` | `MIN(INTEGER) MOD -1` → `TRAP 139` |
+| `spec_range_shortint` | `SHORT(40000)` → `TRAP 134` |
+| `spec_range_shortint_ok` | `SHORT(32767/-32768)` is accepted |
+| `spec_range_byte` | `SHORT(SHORT(200))` → `TRAP 134` |
+| `spec_range_char` | `CHR(70000)` → `TRAP 134` |
+| `spec_range_shortchar` | `SHORT(CHAR 300)` → `TRAP 134` |
+| `spec_range_nocheck` | `-nocheck` truncates instead of trapping |
+| `spec_range_legacy` | the same check through the `-legacy` emitter |
 | `spec_real_div_zero` | `1.0 / 0.0` → `INF` (CP report 8.2.2) |
 | `spec_real_overflow` | `-MAX(REAL) * 2.0` → `-INF` |
 | `spec_real_underflow` | `REAL * REAL` underflow to zero |
