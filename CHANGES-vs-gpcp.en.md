@@ -645,6 +645,11 @@ distinguish from an ordinary command error.
 - `FOR`-loop counter increments use `CPJrts.AddI`/`AddL` when checking is
   enabled, for both ascending and descending loops and for `INTEGER`/
   `LONGINT` control variables; `-nocheck` keeps `iadd`/`ladd`;
+- string relational constant folding uses `L.strCmp` correctly
+  (`-1/0/1`); `>` was folded as `sRes > 1` and was always `FALSE` for
+  constants.  `CPJrts.strCmp` now returns `1` when the left array is
+  longer (the second length branch compared `<` twice).  Regression:
+  `spec_str_rel`;
 - runtime classes are **built from** `sources/libs/java/*.java`
   (`MakeRtsJar`, or the test runner); generated `cprts.jar`/`.class` files are
   not committed.  `jars/cprts.jar` remains the unchanged bootstrap jar; the
@@ -668,7 +673,7 @@ semantics.
 
 The runner understands `expect-trap.txt` (one or more expected stderr
 substrings; the module must exit non-zero), `compile-error.txt` (expected
-compiler diagnostic) and `flags.txt` (extra compiler flags); 197/197 cases
+compiler diagnostic) and `flags.txt` (extra compiler flags); 198/198 cases
 pass.  The same spec sources were compiled with the original BlackBox 1.7.2
 compiler as a differential check: every valid case was accepted and every
 expected-error case was rejected.  `javap` confirms
