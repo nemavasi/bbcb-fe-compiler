@@ -992,6 +992,13 @@ CSt.Message( "made mNm name " + mNm^ );
           L.AppendCharOpen(seq, typ.xName)
         | typ : Ty.Array DO
           L.AppendCharOpen(seq, brac);
+          IF typ.length = 0 THEN
+            L.AppendCharOpen(seq, BOX("O:"))   (* open array *)
+          ELSE
+            L.AppendCharOpen(seq, BOX("F"));
+            L.AppendCharOpen(seq, L.intToCharOpen(typ.length));
+            L.AppendCharOpen(seq, BOX(":"))
+          END;
           AppendAnonSig(seq, typ.elemTp)
         | typ : Ty.Record DO
           IF typ.xName = NIL THEN MkRecName(typ) END;
@@ -1732,7 +1739,7 @@ CSt.Message( "made mNm name " + mNm^ );
 (* ------------------------------------------------------------ *)
 
   PROCEDURE EmitProcWrapperExtras*(out : JavaFile; host : Ty.Record);
-    VAR keyMth, envMth, eq, hash, strEq, strHash, ifaceKey : Id.MthId;
+    VAR keyMth, eq, hash, strEq, strHash, ifaceKey : Id.MthId;
         keyTp, sEqTp, sHashTp : Ty.Procedure;
         iface : Ty.Record;
         lf : Label;
@@ -1742,13 +1749,6 @@ CSt.Message( "made mNm name " + mNm^ );
     keyTp := keyMth.type(Ty.Procedure);
     iface := procKeyIface();
 
-   (* public Object procEnv() -- strict CP captures no environment *)
-    envMth := mkMth("procEnv", host, CSt.ntvObj, FALSE);
-    MkCallAttr(envMth, envMth.type(Ty.Procedure));
-    out.StartProc(envMth);
-    out.Code(Jvm.opc_aconst_null);
-    out.Code(Jvm.opc_areturn);
-    out.EndProc();
 
     strEq := mkStringMth("equals", CSt.ntvObj, Blt.boolTp);
     strHash := mkStringMth("hashCode", NIL, Blt.intTp);

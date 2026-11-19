@@ -526,8 +526,9 @@ named procedure, so the `FunctionReference` analogue is the correct one.
 
 - the compiler-generated `Proc$Lit$` wrapper implements
   `CP.CPJrts.ProcKey` and provides `procKey()` (`owner + "." + name +
-  descriptor`), `procEnv()` (`NIL` on the strict branch), `equals(Object)` and
-  `hashCode()`; equality is therefore shared by wrappers with different host
+  descriptor`), `equals(Object)` and `hashCode()`; strict CP captures no
+  environment, so `ProcKey` has no `procEnv` method and the wrappers do not
+  emit one.  Equality is therefore shared by wrappers with different host
   classes;
 - the host class of a procedure type keeps its original Java ABI.  In
   particular, named types declared in a `-special` interface keep
@@ -543,9 +544,12 @@ named procedure, so the `FunctionReference` analogue is the correct one.
   operand (`BinCmp`), so both sides share a base class;
 - ordinary (non-`-special`) modules give every equal signature one structural
   host class (`CP/$T/P...`), extending ADR-067 from anonymous to named types.
-  A named type and an anonymous type with the same formal list are therefore
-  the same JVM class, and values flow between them without casts.  Modules must
-  be recompiled together (already the GPCP model);
+  The structural signature includes the **length** of fixed arrays and an
+  explicit **open/fixed** marker, so `ARRAY 4 OF T`, `ARRAY 8 OF T` and
+  `ARRAY OF T` no longer share a host class.  A named type and an anonymous
+  type with the same formal list are therefore the same JVM class, and values
+  flow between them without casts.  Modules must be recompiled together
+  (already the GPCP model);
 - direct calls through an array element of procedure type (`a[i](x)`) are
   supported: `ExprDesc.liveActuals` and `JavaMaker.CheckCall` handle an
   indirect callee, and `getProcVarInvoke` creates the host class whenever it
@@ -571,7 +575,9 @@ the `ProcKey` wrapper ABI), `array_proc_call`, `var_proc_param_function`,
 cases (method/field/parameter/comparison/return/array, nested field/array and
 predeclared procedures), and the valid strict edge cases `proceq_anon_array`,
 `proceq_multidim_array`, `proceq_anon_field`, `proceq_anon_param`,
-`var_proc_param_anon`; 109/109 cases pass.
+`var_proc_param_anon`, plus `proceq_array_length` (distinct fixed/open array
+signatures) and `proceq_identity` (Java probe for `equals`, `hashCode`, the
+absence of `procEnv` and distinct host classes); 206/206 cases pass.
 
 ---
 

@@ -99,9 +99,11 @@
 
 ## P4 — остаточное по strict CP
 
-- [ ] `procEnv` в strict всегда `NIL` — мёртвый метод в `ProcKey`.
-- [ ] Структурное имя `CP/$T/P…` не включает длину массива и
-  open/fixed-различие.
-- [ ] `hashCode` процедурных значений наблюдаемо не проверяется.
+- [x] `procEnv` удалён из `ProcKey`; обёртки `Proc$Lit$` его больше не
+  генерируют (strict CP не захватывает окружение).
+- [x] Структурное имя `CP/$T/P…` включает длину fixed-массива и явный
+  маркер open/fixed; тест `proceq_array_length`.
+- [x] `hashCode` проверяется Java-probe `proceq_identity` (`equals` ⇒ равный
+  `hashCode`, разные host-классы для разных сигнатур, отсутствие `procEnv`).
 - [ ] ADR-015 (super call к implement-only), ADR-040 (вложенный `WITH`),
   ADR-050 (weak `.cps`) — документированно не закрыты.

@@ -27,6 +27,9 @@ KEEP=1 tests/gpcp/run-tests.sh          # keep the temporary build tree
 ```
 
 The script prints `PASS`/`FAIL` per case and exits non-zero on any failure.
+A case may instead provide `run-java.txt` (a fully qualified Java class in the
+case); the runner compiles the case's `*.java` with `javac` and runs that class
+against the compiled CP modules.  This is used by `proceq_identity`.
 Temporary files go to `$TMPDIR` (or `/tmp`) and are removed afterwards.
 
 Generated runtime classes are not taken from the repository: the runner
@@ -105,6 +108,8 @@ procedure values (see the strict-CP section below).  The full extension variant
 | `proceq_fields_params` | values in record fields, arrays, value and `VAR` parameters |
 | `proceq_cross` | values produced in one module compared in another; same name/signature but a different owner stays unequal |
 | `proceq_named_types` | equal procedure types denoted by different type identifiers compare equal (CP report, Appendix A) |
+| `proceq_array_length` | `ARRAY 4`, `ARRAY 8` and open-array procedure signatures stay distinct |
+| `proceq_identity` | Java probe: equal values have equal `hashCode`, distinct host classes, no `procEnv` |
 | `proceq_special_abi` | named types in a `-special` interface keep `CP/<Mod>/<Mod>_<Type>`; two identical signatures stay distinct; wrappers implement `CP.CPJrts.ProcKey` across the native Java ABI |
 | `proceq_regression` | pointer/string/CHAR/integer/REAL/SET comparisons keep their existing semantics |
 
