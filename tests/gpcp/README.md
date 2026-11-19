@@ -288,6 +288,13 @@ stderr and fails the case).
 | `trap_for_overflow_long_up` | ascending `LONGINT` `FOR` counter overflow → `TRAP 138` |
 | `trap_for_overflow_long_down` | descending `LONGINT` `FOR` counter overflow → `TRAP 138` |
 | `trap_for_nocheck` | `-nocheck` wraps the `FOR` counter instead of trapping |
+| `trap_for_overflow_var_up` | variable upper bound, ascending overflow → `TRAP 138` |
+| `trap_for_overflow_var_down` | variable lower bound, descending overflow → `TRAP 138` |
+| `trap_for_overflow_by3` | `BY 3` overflow → `TRAP 138` |
+| `trap_for_overflow_down_by3` | `BY -3` overflow → `TRAP 138` |
+| `trap_for_overflow_long_var_up` | variable `LONGINT` bound overflow → `TRAP 138` |
+| `trap_for_overflow_long_var_by3` | variable `LONGINT` bound, `BY 4` → `TRAP 138` |
+| `trap_for_nocheck_var` | `-nocheck` wraps a variable-bound `FOR` |
 
 `javap` on `trap_halt` shows `CP/CPJrts/CPJrts.Halt/HaltTrap` and no
 `java/lang/System.exit`; `trap_assert_*` show `new CP/CPJrts/TrapError`.
