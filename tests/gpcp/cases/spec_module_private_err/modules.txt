@@ -1,0 +1,2 @@
+TSpecPrivA.cp
+TSpecPrivB.cp

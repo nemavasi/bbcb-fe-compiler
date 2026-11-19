@@ -945,6 +945,8 @@ MODULE ExprDesc;
           funN : INTEGER;
           lVal : LONGINT;
           rVal : REAL;
+          sVal : SET;
+          bIx  : INTEGER;
           ptrT : T.Pointer;
     BEGIN
       prc  := i.kid(IdLeaf);
@@ -1073,11 +1075,19 @@ MODULE ExprDesc;
                *  significant bits of the long value.
                *)
               IF rslt.kind = numLt THEN
-                (* Pull out ALL of the bits of the numLt.   *)
-                (* At compile-time gpcp will convert from   *)
-                (* int64 to uint32 using the elsepart below *)
-                rslt := mkSetLt(BITS(arg0(LeafX).value.long()));
-                rslt.type := Builtin.setTp;
+                (* Build a plain LeafX.  A SetExp created by mkSetLt has
+                   an empty varSeq, and SetExp.exprAttr would reset its
+                   value to {}; a LeafX keeps the constant value. *)
+                lVal := arg0(LeafX).value.long() MOD 100000000L;
+                IF lVal < 0 THEN INC(lVal, 100000000L) END;
+                sVal := {};
+                FOR bIx := 0 TO 31 DO
+                  IF ODD(lVal) THEN INCL(sVal, bIx) END;
+                  lVal := lVal DIV 2
+                END;
+                leaf := mkLeafVal(setLt, L.newSetVal(sVal));
+                leaf.type := Builtin.setTp;
+                rslt := leaf;
               ELSE
                 (* Graft an unchecked conversion onto the   *)
                 (* root of the argument expression tree.    *)

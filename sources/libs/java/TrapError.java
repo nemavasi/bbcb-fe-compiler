@@ -33,6 +33,8 @@ public final class TrapError extends Error
     public static final int INVARIANT = 100;
     public static final int OVERFLOW = 138;
     public static final int DIV_ZERO = 139;
+    public static final int STRING_TOO_LONG = 136;
+    public static final int RANGE = 134;
     public static final int REAL_INF = 140;
     public static final int REAL_UNDERFLOW = 141;
     public static final int REAL_OVERFLOW = 142;

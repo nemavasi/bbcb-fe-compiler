@@ -250,21 +250,21 @@ stderr and fails the case).
 | `trap_div` | `MIN(INTEGER) DIV -1` → `TRAP 139` |
 | `trap_div_zero` | `DIV 0` → `TRAP 139` |
 | `trap_mod` | `MIN(INTEGER) MOD -1` → `TRAP 139` |
-| `trap_real_div_zero` | `REAL / 0.0` → `TRAP 140` |
-| `trap_real_underflow` | `REAL * REAL` underflow to zero → `TRAP 141` |
-| `trap_real_subnormal` | `REAL * REAL` subnormal result → `TRAP 141` |
-| `trap_real_overflow` | `MAX(REAL) * 2.0` → `TRAP 142` |
-| `trap_real_nan` | `0.0 / 0.0` → `TRAP 143` |
-| `trap_real_add_overflow` | `MAX(REAL) + MAX(REAL)` → `TRAP 142` |
-| `trap_real_sub_overflow` | `MAX(REAL) - (-MAX(REAL))` → `TRAP 142` |
-| `trap_real_div_underflow` | `1.0E-300 / 1.0E300` → `TRAP 141` |
-| `trap_real_short_div_zero` | `SHORTREAL` division by zero → `TRAP 140` |
-| `trap_real_short_overflow` | `MAX(SHORTREAL) * 2.0` → `TRAP 142` |
-| `trap_real_short_underflow` | `SHORTREAL * SHORTREAL` underflow to zero → `TRAP 141` |
-| `trap_real_short_subnormal` | `SHORTREAL * SHORTREAL` subnormal result → `TRAP 141` |
-| `trap_real_short_add_overflow` | `MAX(SHORTREAL) + MAX(SHORTREAL)` → `TRAP 142` |
-| `trap_real_short_sub_overflow` | `MAX(SHORTREAL) - (-MAX(SHORTREAL))` → `TRAP 142` |
-| `trap_real_nocheck` | `-nocheck` keeps unchecked real arithmetic |
+| `spec_real_div_zero` | `1.0 / 0.0` → `INF` (CP report 8.2.2) |
+| `spec_real_overflow` | `-MAX(REAL) * 2.0` → `-INF` |
+| `spec_real_underflow` | `REAL * REAL` underflow to zero |
+| `spec_real_subnormal` | `REAL * REAL` subnormal result is kept |
+| `spec_real_add_overflow` | `MAX(REAL) + MAX(REAL)` → `INF` |
+| `spec_real_sub_overflow` | `MAX(REAL) - (-MAX(REAL))` → `INF` |
+| `spec_real_div_underflow` | `1.0E-300 / 1.0E300` → `0.0` |
+| `spec_real_short_div_zero` | `SHORTREAL` division by zero → `INF` |
+| `spec_real_short_overflow` | `MAX(SHORTREAL) * 2.0` → `INF` |
+| `spec_real_short_underflow` | `SHORTREAL * SHORTREAL` underflow to zero |
+| `spec_real_short_subnormal` | `SHORTREAL * SHORTREAL` subnormal result is kept |
+| `spec_real_short_add_overflow` | `MAX(SHORTREAL) + MAX(SHORTREAL)` → `INF` |
+| `spec_real_short_sub_overflow` | `MAX(SHORTREAL) - (-MAX(SHORTREAL))` → `INF` |
+| `spec_real_nan` | `0.0 / 0.0` → `TRAP 143` (the only checked real trap) |
+| `spec_real_nocheck` | `-nocheck` keeps unchecked real arithmetic |
 | `trap_for_overflow_up` | ascending `INTEGER` `FOR` counter overflow → `TRAP 138` |
 | `trap_for_overflow_down` | descending `INTEGER` `FOR` counter overflow → `TRAP 138` |
 | `trap_for_overflow_long_up` | ascending `LONGINT` `FOR` counter overflow → `TRAP 138` |
@@ -273,9 +273,39 @@ stderr and fails the case).
 
 `javap` on `trap_halt` shows `CP/CPJrts/CPJrts.Halt/HaltTrap` and no
 `java/lang/System.exit`; `trap_assert_*` show `new CP/CPJrts/TrapError`.
-`trap_real_*` show `CP/CPJrts/CPJrts.AddD/SubD/MulD/DivD` (and `F`
+`spec_real_*` show `CP/CPJrts/CPJrts.AddD/SubD/MulD/DivD` (and `F`
 variants); `trap_for_*` show `AddI`/`AddL`; `-nocheck` keeps
-`iadd`/`ladd`/`dadd`/`dmul`/`ddiv`.
+`iadd`/`ladd`/`dadd`/`dmul`/`ddiv`.  Real overflow, underflow and
+division by zero follow the language report (`INF`, `0`/subnormal); only
+an undefined result (NaN) traps `143`, matching BlackBox's FPU control
+word (`Kernel.InitFpu` masks overflow, underflow and zero-divide).
+
+## Language-spec coverage
+
+The `spec_*` cases are organised by the Component Pascal Language Report
+(`documentation/CP-Lang.pdf`).  `SPEC-COVERAGE.md` maps every chapter
+(3 Vocabulary, 4 Declarations, 5 Constants, 6 Types, 7 Variables,
+8 Expressions, 9 Statements, 10 Procedures, 11 Modules, Appendix A) to the
+cases that exercise it.  The suite is self-checking: modules use `ASSERT`
+and the runner treats a failed assertion as a failed case.
+
+| Area | Representative cases |
+|---|---|
+| lexical | `spec_lex_number`, `spec_lex_string`, `spec_lex_comment`, `spec_lex_case` |
+| declarations/scope | `spec_scope_shadow`, `spec_scope_dup`, `spec_scope_forward_type` |
+| constants | `spec_const_expr`, `spec_const_fold_long` |
+| types | `spec_type_domains`, `spec_type_array_*`, `spec_type_record_ext`, `spec_type_guard`, `spec_type_proc_type`, `spec_type_anyptr_anyrec` |
+| expressions | `spec_expr_precedence`, `spec_expr_shortcircuit`, `spec_expr_div_mod`, `spec_expr_sets`, `spec_expr_strings`, `spec_expr_relations`, `spec_expr_designator` |
+| statements | `spec_stmt_if`, `spec_stmt_case`, `spec_stmt_while_repeat`, `spec_stmt_for`, `spec_stmt_loop_exit`, `spec_stmt_with_else`, `spec_stmt_empty`, `spec_stmt_assign_*` |
+| procedures | `spec_proc_nested_recursion`, `spec_proc_forward`, `spec_proc_params`, `spec_proc_method_*` |
+| predeclared | `spec_pred_abs`, `spec_pred_ash`, `spec_pred_bits`, `spec_pred_cap_ord_chr`, `spec_pred_entier`, `spec_pred_len_size`, `spec_pred_long_short`, `spec_pred_new_clear`, `spec_pred_inc_dec_incl_excl`, `spec_pred_odd` |
+| modules | `spec_module_alias`, `spec_module_export_*`, `spec_module_body_order`, `spec_module_*_err` |
+| REAL semantics | `spec_real_*` |
+
+The same sources were compiled with the original BlackBox 1.7.2 compiler
+(Dev -> Compile) as a differential check: every valid spec case was
+accepted and every `compile-error.txt` case was rejected.  See
+`SPEC-COVERAGE.md` for the exact list.
 
 ## Not covered
 

@@ -1,0 +1,2 @@
+TSpecReadA.cp
+TSpecReadB.cp

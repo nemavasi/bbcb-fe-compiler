@@ -1,0 +1,2 @@
+TSpecAliasA.cp
+TSpecAliasB.cp
