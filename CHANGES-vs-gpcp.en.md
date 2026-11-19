@@ -626,11 +626,12 @@ distinguish from an ordinary command error.
   behaviour;
 - division/modulo (`DIV`, `MOD`) trap `139` for a zero divisor and for
   `MIN / -1` (the JVM itself returns `MIN` for the latter);
-- narrowing conversions (`SHORT`, `CHR`, `CHAR`/`SHORTCHAR`/`BYTE`/
-  `SHORTINT`) check the target range and trap `134` when checking is
-  enabled (`CPJrts.RangeCheckI`).  `LONGINT -> INTEGER` stays a plain
-  truncation, as specified for `SHORT`.  `-nocheck` keeps the unchecked
-  `i2s`/`i2b`/`i2c`/mask code;
+- `CHR(x)` checks that the ordinal fits `CHAR` (0..65535) and traps
+  `134` (`CPJrts.RangeCheckI`) when checking is enabled.  `SHORT` is a
+  truncating projection per report 10.3 (`LONGINT -> INTEGER`,
+  `INTEGER -> SHORTINT`, `SHORTINT -> BYTE`, `CHAR -> SHORTCHAR`), so it
+  is not range-checked: `SHORT(40000)` is -25536.  `-nocheck` keeps the
+  unchecked `i2c`/`i2s`/`i2b`/mask code;
 - checked `REAL`/`SHORTREAL` arithmetic: `+`, `-`, `*` and `/` go through
   `CPJrts.AddD/SubD/MulD/DivD` (and the `F` variants) when checking is
   enabled.  Following the language report (8.2.2) and BlackBox's FPU
@@ -673,7 +674,7 @@ semantics.
 
 The runner understands `expect-trap.txt` (one or more expected stderr
 substrings; the module must exit non-zero), `compile-error.txt` (expected
-compiler diagnostic) and `flags.txt` (extra compiler flags); 198/198 cases
+compiler diagnostic) and `flags.txt` (extra compiler flags); 204/204 cases
 pass.  The same spec sources were compiled with the original BlackBox 1.7.2
 compiler as a differential check: every valid case was accepted and every
 expected-error case was rejected.  `javap` confirms

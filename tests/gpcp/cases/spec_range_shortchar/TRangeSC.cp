@@ -19,5 +19,6 @@ MODULE TRangeSC;
   IMPORT CPmain;
   VAR i: INTEGER; c: CHAR; sc: SHORTCHAR;
 BEGIN
-  i := 300; c := CHR(i); sc := SHORT(c)
+  i := 300; c := CHR(i); sc := SHORT(c);
+  ASSERT(ORD(sc) = 44)
 END TRangeSC.
