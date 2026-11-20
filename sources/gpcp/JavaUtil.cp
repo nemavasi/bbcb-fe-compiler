@@ -2576,10 +2576,19 @@ CSt.Message( "made mNm name " + mNm^ );
     VAR	local : INTEGER;
 	sTemp : INTEGER;
 	label : Label;
+	useLen, haveLen : Label;
 	elTyp : Sym.Type;
   BEGIN
    (*
     *    Stack at entry is (top) srcRef, dstRef...
+    *
+    *    A fixed-size destination array copies MIN(typ.length,
+    *    src.length) elements.  The source may be shorter than
+    *    the declared size: a `$` string value is a char[] of
+    *    exactly the string length, and copying the declared
+    *    count read past its end (ArrayIndexOutOfBoundsException
+    *    "Index 255 out of bounds for length 4", hit while
+    *    loading the original Dev/Rsrc/RTDebug form).
     *)
     label := jf.newLoopheaderLabel();
     local := jf.newLocal( Blt.intTp ); 
@@ -2587,7 +2596,20 @@ CSt.Message( "made mNm name " + mNm^ );
       jf.Code(Jvm.opc_dup);
       jf.Code(Jvm.opc_arraylength);
     ELSE 
-      jf.PushInt(typ.length);
+      useLen := jf.newLabel();
+      haveLen := jf.newLabel();
+      jf.Code(Jvm.opc_dup);            (* src, src, dst      *)
+      jf.Code(Jvm.opc_arraylength);    (* srcLen, src, dst   *)
+      jf.PushInt(typ.length);          (* len, srcLen, src, dst *)
+     (* stack: srcLen below, len on top; if_icmpge compares
+        value1 (srcLen) >= value2 (len), i.e. "len <= srcLen" *)
+      jf.CodeLb(Jvm.opc_if_icmpge, useLen);
+      jf.Code(Jvm.opc_dup);            (* src, src, dst      *)
+      jf.Code(Jvm.opc_arraylength);    (* srcLen, src, dst   *)
+      jf.CodeLb(Jvm.opc_goto, haveLen);
+      jf.DefLab(useLen);
+      jf.PushInt(typ.length);          (* len, src, dst      *)
+      jf.DefLab(haveLen);              (* n, src, dst        *)
     END;
     jf.StoreLocal(local, Blt.intTp);
    (*

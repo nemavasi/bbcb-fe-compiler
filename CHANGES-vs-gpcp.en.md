@@ -704,3 +704,65 @@ expected-error case was rejected.  `javap` confirms
 helpers, and no `java/lang/System.exit`.
 
 
+
+---
+
+## 13. `sources/gpcp/JavaUtil.cp` — array copy length is clamped to the source
+
+**Before.** `ValArrCopy` (emitted for every array assignment, record `__copy__`
+and array element copy) took the copy count from the **declared** length of the
+destination when that length is static:
+
+```cp
+IF typ.length = 0 THEN  (* open array *)
+  jf.Code(Jvm.opc_dup); jf.Code(Jvm.opc_arraylength)
+ELSE
+  jf.PushInt(typ.length)          (* declared 256, whatever the source has *)
+END
+```
+
+A CP fixed array is a Java `char[]`/`int[]` whose **physical** length can be
+shorter than the declaration: the `$` (string) conversion yields an array of
+exactly the string length, and such a value can end up in a variable declared
+as `ARRAY 256 OF CHAR` (for example, a control label in `Controls.CallGuard`).
+The generated loop then read `src[255]` from a 4-element array:
+
+```
+java.lang.ArrayIndexOutOfBoundsException: Index 255 out of bounds for length 4
+    at CP.Controls.Controls.CallGuard(Controls.Mod:297)
+```
+
+This was not theoretical: loading the original `Dev/Rsrc/RTDebug` form in the
+bbcb-fe port died with exactly that trap, and the "Trap" window covered the
+debugger tool.
+
+**After.** For a static destination the count is `MIN(typ.length, src.length)`:
+
+```cp
+jf.Code(Jvm.opc_dup); jf.Code(Jvm.opc_arraylength)   (* srcLen *)
+jf.PushInt(typ.length)                               (* len, srcLen *)
+jf.CodeLb(Jvm.opc_if_icmpge, useLen)                 (* srcLen >= len ? *)
+jf.Code(Jvm.opc_dup); jf.Code(Jvm.opc_arraylength)   (* n := srcLen *)
+jf.CodeLb(Jvm.opc_goto, haveLen)
+jf.DefLab(useLen); jf.PushInt(typ.length)            (* n := len *)
+jf.DefLab(haveLen)
+```
+
+Note the operand order: `if_icmpge` pops `value2` (top, `len`) and `value1`
+(below, `srcLen`) and branches when `value1 >= value2`. Getting it backwards
+(`if_icmple`) reproduces the original trap, because then the branch always
+takes the declared length - this was caught by reading the JDI `bci` of the
+failing instruction.
+
+For an ordinary array the source is not shorter than the declared size, so
+exactly as many elements as before are copied; a short `$` value copies its
+own characters (including the terminating `0X`) and leaves the rest of the
+destination untouched.
+
+**Verification.** `tests/gpcp/cases/adr309_short_source`: a probe replaces a
+record field with `"Step".toCharArray()` (Java does not check CP types) and
+calls a CP procedure that copies the field - with the stock `jars/gpcp.jar` the
+JVM reports `Index 255 out of bounds for length 4`, with the patched compiler
+the case prints `PASS`. In bbcb-fe the same change makes
+`Dev/Rsrc/RTDebug` load (`smoke_debugger_ui`), and all form/controls smokes stay
+green.

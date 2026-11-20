@@ -86,6 +86,7 @@ a test failure.  Output is compared byte for byte.
 | 223 | `adr223_weak_shadow` | weak import does not shadow an explicit declaration |
 | 224 | `adr224_system` | `IMPORT SYSTEM` on the JVM, `SYSTEM.LSH` / `SYSTEM.ROT` |
 | 238 | `adr238_after_end` | non-ASCII text after `END <Module>.` is not scanned |
+| 309 | `adr309_short_source` | fixed-size array copy takes `MIN(declared, src.length)`: a short `$` value does not read past its end |
 
 ## CP conformance regressions
 
