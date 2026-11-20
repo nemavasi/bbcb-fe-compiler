@@ -16,3 +16,4 @@
 
 # Default mkdistro output directory
 /sources/gpcp/gpcp-JVM/
+/.idea/
