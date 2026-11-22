@@ -47,6 +47,12 @@ public final class TrapError extends Error
     public final String[] names;
     public final Object[] values;
 
+    /* Original exception for a compiler catch-all (runtime trap); may be null. */
+    public final Throwable cause;
+
+    /* Method whose catch-all produced names/values (null => top frame). */
+    public final StackTraceElement snapshotAt;
+
     /* Full Java stack trace captured when the trap object was constructed. */
     public final StackTraceElement[] javaTrace;
 
@@ -62,12 +68,30 @@ public final class TrapError extends Error
 
     public TrapError(int code, String text, String[] names, Object[] values)
     {
+        this(code, text, names, values, null);
+    }
+
+    /** Trap for a compiler catch-all: keep the original exception's stack. */
+    public TrapError(int code, String text, String[] names, Object[] values,
+                     Throwable cause)
+    {
+        this(code, text, names, values, cause, null);
+    }
+
+    public TrapError(int code, String text, String[] names, Object[] values,
+                     Throwable cause, StackTraceElement snapshotAt)
+    {
         super(text);
         this.code = code;
         this.text = text;
         this.names = names;
         this.values = values;
-        this.javaTrace = getStackTrace();
+        this.cause = cause;
+        this.snapshotAt = snapshotAt;
+        this.javaTrace = cause != null ? cause.getStackTrace() : getStackTrace();
+        if (cause != null) {
+            try { initCause(cause); } catch (Throwable ignored) { }
+        }
     }
 
     /** Parse the code out of the message produced by JavaMaker. */
@@ -94,7 +118,35 @@ public final class TrapError extends Error
         }
         if (m.startsWith("CASE-trap:")) return CASE;
         if (m.startsWith("WITH else-trap:")) return WITH;
-        return INVARIANT;
+        int n = codeFromText(m);
+        return n >= 0 ? n : INVARIANT;
+    }
+
+    /** Код из текста BlackBox: `TRAP 131`, `#143: ...`, `ASSERT 20: ...`. */
+    private static int codeFromText(String m)
+    {
+        String s = m.trim();
+        if (s.startsWith("TRAP ")) return digits(s, 5);
+        if (s.startsWith("#")) return digits(s, 1);
+        if (s.startsWith("ASSERT")) {
+            int i = 6;
+            while (i < s.length() && Character.isWhitespace(s.charAt(i))) i++;
+            int n = digits(s, i);
+            return n < 0 ? ASSERT : n;
+        }
+        return -1;
+    }
+
+    /** Число, начинающееся с позиции `i`, либо -1. */
+    private static int digits(String s, int i)
+    {
+        int j = i;
+        int n = 0;
+        while (j < s.length() && Character.isDigit(s.charAt(j))) {
+            n = n * 10 + (s.charAt(j) - '0');
+            j++;
+        }
+        return j > i ? n : -1;
     }
 
     /** Render the complete Java stack trace captured at the trap site. */

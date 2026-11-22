@@ -104,6 +104,7 @@ MODULE JavaUtil;
        TrapMsg* = 32;    (* trap with message + local snapshot *)
        AddD* = 33; SubD* = 34; MulD* = 35; DivD* = 36;
        AddF* = 37; SubF* = 38; MulF* = 39; DivF* = 40; ChkI* = 41;
+       TrapCatch* = 42;  (* runtime exception + local snapshot *)
 
 (* ============================================================ *)
 
@@ -288,6 +289,10 @@ MODULE JavaUtil;
 
   PROCEDURE (jf : JavaFile)Try*(),NEW,ABSTRACT;
   PROCEDURE (jf : JavaFile)Catch*(prc : Id.Procs),NEW,ABSTRACT;
+  (* Compiler catch-all around a procedure body: catches java.lang.Exception
+     and turns it into TrapError with a snapshot of the current locals. *)
+  PROCEDURE (jf : JavaFile)TryAll*(),NEW,ABSTRACT;
+  PROCEDURE (jf : JavaFile)CatchAll*(),NEW,ABSTRACT;
   PROCEDURE (jf : JavaFile)MkNewException*(),NEW,ABSTRACT;
   PROCEDURE (jf : JavaFile)InitException*(),NEW,ABSTRACT;
 

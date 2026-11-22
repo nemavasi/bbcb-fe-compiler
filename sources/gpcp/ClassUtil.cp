@@ -2040,6 +2040,16 @@ CSt.PrintLn( "DefLabC: " + c );
 
 (* ------------------------------------------------------------ *)
 
+  (* Catch-all snapshot is implemented only by the ASM JVM backend; the
+     legacy emitter keeps the old behaviour. *)
+  PROCEDURE (cf : ClassFile)TryAll*();
+  BEGIN
+  END TryAll;
+
+  PROCEDURE (cf : ClassFile)CatchAll*();
+  BEGIN
+  END CatchAll;
+
   PROCEDURE (cf : ClassFile)Catch*(prc : Id.Procs);
   BEGIN
     cf.meth.except.endAndHandler := cf.meth.codes.codeLen;
