@@ -58,6 +58,7 @@ MODULE CompState;
     ntvObj* : Symbols.Type;     (* native Object type           *)
     ntvStr* : Symbols.Type;     (* native String type           *)
     ntvExc* : Symbols.Type;     (* native Exceptions type       *)
+    ntvThrow* : Symbols.Type;   (* native Throwable type        *)
     ntvTyp* : Symbols.Type;     (* native System.Type type      *)
     ntvEvt* : Symbols.Type;     (* native MulticastDelegate     *)
     rtsXHR* : Symbols.Type;     (* native XHR type descriptor   *)

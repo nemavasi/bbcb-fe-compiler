@@ -306,6 +306,7 @@ MODULE JavaMaker;
     * class name jl.Throwable. There are alternative fixes ...
     *)
     Bi.MkDummyClass("Throwable", blk, Ty.extns, thr);
+    CSt.ntvThrow := thr.type;
     Bi.AddDummyBaseTp(exc, thr);
    (*
     *  Create import descriptor for CP.RTS
@@ -770,6 +771,10 @@ MODULE JavaMaker;
       *)
       out.InitVars(proc);
       IF proc.rescue # NIL THEN out.Try END;
+      (* D: catch runtime exceptions around the whole body and attach a
+         snapshot of the locals.  Procedures with a CP RESCUE keep their
+         existing handler (the user asked for that semantics). *)
+      IF proc.rescue = NIL THEN out.TryAll END;
      (*
       *  Finally! Emit the method body.
       *)
@@ -778,26 +783,31 @@ MODULE JavaMaker;
       *  For proper procedures which reach the fall-
       *  through ending, copy OUT params and return.
       *)
-      IF live THEN (* patched (ADR-047): a function reaching END returns a value *)
+      IF live THEN (* patched (ADR-047/310): function without RETURN traps 131 *)
         IF proc.type.isProperProcType() THEN
           out.FixOutPars(proc, retn);
           out.Return(retn);
         ELSE
-          out.PushJunkAndReturn();
+          (* BlackBox 1.7.2: падение на END функции — трап 131
+             (`function without RETURN`), а не возврат junk.  Это же
+             закрывает `goto` за конец метода, из-за которого ASM
+             отбраковывал `Controls` (см. ADR-047). *)
+          out.Trap("TRAP 131");
         END;
       END;
       IF proc.rescue # NIL THEN
         out.Catch(proc);
         e.EmitStat(proc.rescue, live);
-        IF live THEN (* patched (ADR-047): see above *)
+        IF live THEN (* patched (ADR-047/310): see above *)
           IF proc.type.isProperProcType() THEN
             out.FixOutPars(proc, retn);
             out.Return(retn);
           ELSE
-            out.PushJunkAndReturn();
+            out.Trap("TRAP 131");
           END;
         END;
       END;
+      IF proc.rescue = NIL THEN out.CatchAll END;
     END;
     out.EndProc();
   END EmitProc;

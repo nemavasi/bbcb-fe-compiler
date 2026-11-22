@@ -115,6 +115,86 @@ public class CPJrts
 	    throw new TrapError(msg, names, values);
 	}
 
+	/* Compiler catch-all: a runtime exception with a snapshot of the
+	   procedure's locals at the throw point.  The original exception is
+	   kept as cause so kernel/DevDebug use its stack/line. */
+	public static TrapError TrapCatch(Throwable cause, String[] names, Object[] values)
+	{
+	    if (cause instanceof StackOverflowError || cause instanceof OutOfMemoryError) {
+	        throw (Error) cause;
+	    }
+	    StackTraceElement at = snapshotFrame();
+	    if (cause instanceof TrapError) {
+	        TrapError te = (TrapError) cause;
+	        if (te.names != null) return te;       // callee already has a snapshot
+	        return new TrapError(te.code, te.text, names, values, te, at);
+	    }
+	    int code = trapCode(cause);
+	    String text = cause == null ? "" : cause.getMessage();
+	    if (text == null || text.isEmpty()) text = String.valueOf(cause);
+	    return new TrapError(code, text, names, values, cause, at);
+	}
+
+	/* The method containing this catch-all (skip CPJrts helper frames). */
+	private static StackTraceElement snapshotFrame()
+	{
+	    StackTraceElement[] tr = new Throwable().getStackTrace();
+	    for (StackTraceElement e : tr) {
+	        String c = e.getClassName();
+	        if (c.startsWith("CP.") && !c.startsWith("CP.CPJrts.")) return e;
+	    }
+	    return null;
+	}
+
+	/* JVM exception -> BlackBox trap code (mirror of Kernel.Traps.codeOf). */
+	private static int trapCode(Throwable t)
+	{
+	    if (t instanceof TrapError) return ((TrapError) t).code;
+	    if (t instanceof NullPointerException) return 201;
+	    if (t instanceof ArrayIndexOutOfBoundsException) return 135;
+	    if (t instanceof StringIndexOutOfBoundsException) return 135;
+	    if (t instanceof IndexOutOfBoundsException) return 135;
+	    if (t instanceof ArithmeticException) {
+	        String m = t.getMessage();
+	        if (m != null && m.toLowerCase().contains("overflow")) return 138;
+	        return 139;
+	    }
+	    if (t instanceof NegativeArraySizeException) return 134;
+	    if (t instanceof ClassCastException) return 132;
+	    if (t instanceof ArrayStoreException) return 132;
+	    if (t instanceof StackOverflowError) return 137;
+	    if (t instanceof OutOfMemoryError) return 257;
+	    String m = t.getMessage();
+	    if (m != null) {
+	        int n = codeFromMessage(m.trim());
+	        if (n >= 0) return n;
+	    }
+	    return -1;
+	}
+
+	/* `#143: ...`, `ASSERT 20: ...`, `TRAP 7` in a platform message. */
+	private static int codeFromMessage(String s)
+	{
+	    int i;
+	    if (s.startsWith("#")) {
+	        i = 1;
+	    } else if (s.startsWith("ASSERT")) {
+	        i = 6;
+	        while (i < s.length() && Character.isWhitespace(s.charAt(i))) i++;
+	    } else if (s.startsWith("TRAP ")) {
+	        i = 5;
+	    } else {
+	        return -1;
+	    }
+	    int j = i;
+	    int n = 0;
+	    while (j < s.length() && Character.isDigit(s.charAt(j))) {
+	        n = n * 10 + (s.charAt(j) - '0');
+	        j++;
+	    }
+	    return j > i ? n : -1;
+	}
+
 /* ==================================================================== *
  *		Checked INTEGER/LONGINT arithmetic (trap 138)		*
  * ==================================================================== */

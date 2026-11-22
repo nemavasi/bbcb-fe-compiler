@@ -133,6 +133,8 @@ MODULE AsmUtil;
                        entryLab   : AsmLabel;
                        exitLab    : AsmLabel;
                        rescueLab  : AsmLabel;
+                       trapSave   : Frm.FrameSave;  (* locals at TryAll entry *)
+                       trapStart  : AsmLabel;       (* try start after InitVars *)
                        caseArray  : POINTER TO ARRAY OF ASM.Label;
                        caseEval   : Frm.FrameSave;
                        mthFrame   : Frm.MethodFrame;
@@ -150,6 +152,7 @@ MODULE AsmUtil;
       clinitStr,  (* "<clinit>"            *)
       copyStr,    (* "__copy__"            *)
       jleStr,     (* "java/lang/Exception" *)
+      jltStr,     (* "java/lang/Throwable" *)
       jTrapStr,   (* "CP/CPJrts/TrapError" *)
       jlmStr,     (* "java/lang/Math"      *)
       jlcStr,     (* "java/lang/Class"     *)
@@ -320,6 +323,8 @@ MODULE AsmUtil;
       emtr.rescueLab := NIL;
       emtr.entryLab := NIL;
       emtr.exitLab := NIL;
+      emtr.trapSave := NIL;
+      emtr.trapStart := NIL;
      (*
       * This field is used to suppress emission
       * of multiple stack frames for the same offset.  
@@ -1799,6 +1804,45 @@ MODULE AsmUtil;
   END Catch;
 
  (* --------------------------------------------------------- *)
+ (*   Compiler catch-all: TryAll/CatchAll.  Catches any       *)
+ (*   java.lang.Exception in the procedure body, keeps the    *)
+ (*   exception on the operand stack and appends the local     *)
+ (*   snapshot (PushTrapFrame).  TrapCatch(cause, names,       *)
+ (*   values) returns TrapError; athrow.  The handler frame    *)
+ (*   keeps the procedure's local types (unlike CP RESCUE,     *)
+ (*   which invalidates them): the snapshot loads them.        *)
+ (* --------------------------------------------------------- *)
+  PROCEDURE (emtr : AsmEmitter)TryAll*();
+  BEGIN
+    (* Save the frame after InitVars: all CP locals initialized with
+       their declared types.  The handler restores exactly this state,
+       so loading them in the snapshot is verifier-safe. *)
+    emtr.trapSave := emtr.mthFrame.GetFrameSave( emtr.trapSave );
+    emtr.rescueLab := MkNewAsmLabel();
+    INCL( emtr.rescueLab.attr, Ju.forceEmit );
+    emtr.trapStart := MkNewAsmLabel();
+    INCL( emtr.trapStart.attr, Ju.forceEmit );
+    emtr.DefLab( emtr.trapStart );       (* after InitVars: all locals known *)
+    emtr.thisMv.visitTryCatchBlock(
+        emtr.trapStart.asmLb,
+        emtr.rescueLab.asmLb,
+        emtr.rescueLab.asmLb, jltStr );
+  END TryAll;
+
+  PROCEDURE (emtr : AsmEmitter)CatchAll*();
+  BEGIN
+    emtr.mthFrame.ValidateEvalStack();
+    emtr.mthFrame.OverrideLocalState( emtr.trapSave );
+    emtr.mthFrame.setDepth( 1 );
+    emtr.mthFrame.SetTosType( CSt.ntvThrow );
+    emtr.DefLabC( emtr.rescueLab, "Catch All Entry" );
+    emtr.PushTrapFrame();                 (* cause, names, values *)
+    emtr.CallRTS( Ju.TrapCatch, 3, 1 );
+    emtr.Code( Jvm.opc_athrow );
+    emtr.mthFrame.InvalidateEvalStack()
+  END CatchAll;
+
+ (* --------------------------------------------------------- *)
 
   PROCEDURE (emtr : AsmEmitter)MkNewException*();
   BEGIN
@@ -2071,6 +2115,7 @@ BEGIN  (* Module Body *)
   clinitStr     := MKSTR( "<clinit>"            );
   copyStr       := MKSTR( "__copy__"            );
   jleStr        := MKSTR( "java/lang/Exception" );
+  jltStr        := MKSTR( "java/lang/Throwable" );
   jTrapStr      := MKSTR( "CP/CPJrts/TrapError" );
   jlmStr        := MKSTR( "java/lang/Math"      );
   jlcStr        := MKSTR( "java/lang/Class"     );
@@ -2127,6 +2172,7 @@ BEGIN  (* Module Body *)
   procNames[Ju.Halt] := Lv.strToCharOpen("Halt");
   procNames[Ju.HaltTrap] := Lv.strToCharOpen("HaltTrap");
   procNames[Ju.TrapMsg] := Lv.strToCharOpen("TrapMsg");
+  procNames[Ju.TrapCatch] := Lv.strToCharOpen("TrapCatch");
   procNames[Ju.AddD] := Lv.strToCharOpen("AddD");
   procNames[Ju.SubD] := Lv.strToCharOpen("SubD");
   procNames[Ju.MulD] := Lv.strToCharOpen("MulD");
@@ -2175,6 +2221,7 @@ BEGIN  (* Module Body *)
   procSigs[Ju.Halt] := Lv.strToCharOpen("(I)V");
   procSigs[Ju.HaltTrap] := Lv.strToCharOpen("(I[Ljava/lang/String;[Ljava/lang/Object;)V");
   procSigs[Ju.TrapMsg] := Lv.strToCharOpen("(Ljava/lang/String;[Ljava/lang/String;[Ljava/lang/Object;)LCP/CPJrts/TrapError;");
+  procSigs[Ju.TrapCatch] := Lv.strToCharOpen("(Ljava/lang/Throwable;[Ljava/lang/String;[Ljava/lang/Object;)LCP/CPJrts/TrapError;");
   procSigs[Ju.AddD] := Lv.strToCharOpen("(DD)D");
   procSigs[Ju.SubD] := procSigs[Ju.AddD];
   procSigs[Ju.MulD] := procSigs[Ju.AddD];
@@ -2200,6 +2247,7 @@ BEGIN  (* Module Body *)
   procRetS[Ju.Halt] := NIL;
   procRetS[Ju.HaltTrap] := NIL;
   procRetS[Ju.TrapMsg] := Lv.strToCharOpen("LCP/CPJrts/TrapError;");
+  procRetS[Ju.TrapCatch] := procRetS[Ju.TrapMsg];
   procRetS[Ju.AddD] := Lv.strToCharOpen("D");
   procRetS[Ju.SubD] := procRetS[Ju.AddD];
   procRetS[Ju.MulD] := procRetS[Ju.AddD];

@@ -1492,6 +1492,15 @@ MODULE JsmnUtil;
 
 (* ------------------------------------------------------------ *)
 
+  (* Catch-all snapshot is implemented only by the ASM JVM backend. *)
+  PROCEDURE (os : JsmnFile)TryAll*();
+  BEGIN
+  END TryAll;
+
+  PROCEDURE (os : JsmnFile)CatchAll*();
+  BEGIN
+  END CatchAll;
+
   PROCEDURE (os : JsmnFile)Catch*(prc : Id.Procs);
   BEGIN
     os.DefLab(os.proc.exLb);
